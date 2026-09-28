@@ -1,2 +1,2 @@
-# blog_-project
+# blog_project
 preparación del blog_Django 
