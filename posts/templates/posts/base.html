@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Blog{% endblock %}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: #18181b; color: #e4e4e7; }
+        a { color: inherit; text-decoration: none; }
+        header { background: #4f39dd; padding: 20px; }
+        header a { font-size: 22px; font-weight: 700; color: #fff; }
+        main { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+        .encabezado { display: flex; justify-content: space-between; align-items: center; }
+        h1 { margin: 0; font-size: 30px; }
+        .btn { background: #4f39dd; color: #fff; padding: 8px 16px; border-radius: 6px; border: 0; font-size: 15px; cursor: pointer; }
+        .btn:hover { background: #6049f0; }
+        .stats { color: #a1a1aa; margin: 16px 0 24px; }
+        .stats span { margin-right: 24px; }
+        .card { display: block; background: #212124; border: 1px solid #333338; border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+        .card:hover { border-color: #4f39dd; }
+        .card h2 { margin: 0 0 16px; font-size: 22px; }
+        .meta { color: #a1a1aa; font-size: 14px; }
+        form p { display: flex; flex-direction: column; gap: 6px; }
+        input, textarea { background: #212124; color: #e4e4e7; border: 1px solid #333338; border-radius: 6px; padding: 8px; font: inherit; }
+        .volver { color: #a1a1aa; display: inline-block; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <header><a href="{% url 'lista_posts' %}">📝 Mi Blog</a></header>
+    <main>{% block content %}{% endblock %}</main>
+</body>
+</html>

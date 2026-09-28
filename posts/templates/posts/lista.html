@@ -1,0 +1,24 @@
+{% extends "posts/base.html" %}
+
+{% block content %}
+<div class="encabezado">
+    <h1>Posts</h1>
+    <a class="btn" href="{% url 'nuevo_post' %}">+ Nuevo post</a>
+</div>
+
+{% if posts %}
+<div class="stats">
+    <span>Promedio de likes: {{ promedio }}</span>
+    <span>Más popular: {{ mas_popular.titulo }}</span>
+</div>
+{% endif %}
+
+{% for post in posts %}
+<a class="card" href="{% url 'detalle_post' post.pk %}">
+    <h2>{{ post.titulo }}</h2>
+    <div class="meta">por {{ post.autor }} — {{ post.likes }} likes</div>
+</a>
+{% empty %}
+<p class="stats">Todavía no hay posts.</p>
+{% endfor %}
+{% endblock %}

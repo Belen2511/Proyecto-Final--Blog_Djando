@@ -1,0 +1,10 @@
+{% extends "posts/base.html" %}
+
+{% block title %}{{ post.titulo }} | Mi Blog{% endblock %}
+
+{% block content %}
+<h1>{{ post.titulo }}</h1>
+<p class="meta">por {{ post.autor }} — {{ post.likes }} likes</p>
+<p>{{ post.contenido|linebreaksbr }}</p>
+<a class="volver" href="{% url 'lista_posts' %}">← Volver</a>
+{% endblock %}

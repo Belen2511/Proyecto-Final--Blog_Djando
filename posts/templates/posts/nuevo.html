@@ -1,0 +1,13 @@
+{% extends "posts/base.html" %}
+
+{% block title %}Nuevo post | Mi Blog{% endblock %}
+
+{% block content %}
+<h1>Nuevo post</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn" type="submit">Guardar</button>
+</form>
+<a class="volver" href="{% url 'lista_posts' %}">← Volver</a>
+{% endblock %}
