@@ -69,6 +69,15 @@ Abrir en el navegador:
 http://127.0.0.1:8000/
 ```
 
+Páginas disponibles:
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Página de inicio |
+| `/acerca/` | Acerca de (autor y propósito del sitio) |
+| `/posts/` | Listado de publicaciones |
+| `/nuevo/` | Crear una publicación |
+
 Para detener el servidor: `Ctrl + C`.
 
 ## Estructura
@@ -80,21 +89,34 @@ blog_django/
 ├── README.md
 ├── .gitignore
 ├── blog_project/        # Configuración del proyecto
-│   ├── __init__.py
 │   ├── settings.py
-│   ├── urls.py
+│   ├── urls.py          # Incluye las rutas de posts con include()
 │   ├── asgi.py
 │   └── wsgi.py
 └── posts/               # App principal del blog
-    ├── __init__.py
     ├── admin.py
     ├── apps.py
-    ├── migrations/
-    │   └── __init__.py
+    ├── forms.py
     ├── models.py
-    ├── tests.py
-    └── views.py
+    ├── urls.py          # Rutas de la app
+    ├── views.py
+    ├── migrations/
+    ├── static/posts/css/
+    │   └── estilos.css  # Estilos del sitio
+    └── templates/posts/
+        ├── base.html    # Layout base con menú de navegación
+        ├── inicio.html
+        ├── acerca.html
+        ├── lista.html
+        ├── detalle.html
+        └── nuevo.html
 ```
+
+## Templates y estilos
+
+Todas las páginas extienden de `posts/base.html` con `{% extends 'posts/base.html' %}`
+y rellenan el bloque `{% block content %}`. El CSS se carga desde
+`posts/static/posts/css/estilos.css` con `{% static %}`.
 
 ## Aplicaciones
 
