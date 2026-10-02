@@ -1,0 +1,16 @@
+{% extends 'posts/base.html' %}
+
+{% block title %}Inicio · Mi Blog{% endblock %}
+
+{% block content %}
+<h1>Bienvenido a Mi Blog</h1>
+<p>
+    Este es un espacio para compartir ideas, aprendizajes y experiencias.
+    Acá vas a encontrar publicaciones sobre distintos temas, y podés crear
+    las tuyas propias para sumarte a la conversación.
+</p>
+<p>
+    Explorá los posts publicados desde el menú o animate a escribir el primero.
+</p>
+<a class="btn" href="{% url 'lista_posts' %}">Ver publicaciones</a>
+{% endblock %}

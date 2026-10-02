@@ -5,6 +5,14 @@ from .forms import PostForm
 from .models import Post
 
 
+def inicio(request):
+    return render(request, "posts/inicio.html")
+
+
+def acerca(request):
+    return render(request, "posts/acerca.html")
+
+
 def lista_posts(request):
     posts = Post.objects.all()
     promedio = posts.aggregate(promedio=Avg("likes"))["promedio"] or 0
