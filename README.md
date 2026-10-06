@@ -22,13 +22,13 @@ Configuración regional:
 Clonar el repositorio:
 
 ```bash
-git clone https://github.com/Belen2511/blog_django.git
+git clone https://github.com/Belen2511/Proyecto-Blog_Django.git
 ```
 
 Entrar a la carpeta del proyecto:
 
 ```bash
-cd blog_django
+cd Proyecto-Blog_Django
 ```
 
 Crear el entorno virtual:
@@ -56,6 +56,16 @@ Instalar las dependencias:
 ```bash
 pip install -r requirements.txt
 ```
+
+Crear la base de datos (aplica las migraciones del modelo `Post`):
+
+```bash
+python manage.py migrate
+```
+
+La base de datos (`db.sqlite3`) no se sube al repositorio, así que este paso
+es necesario la primera vez. Después hay que cargar los posts desde el admin
+(ver [Cargar contenido desde el admin](#cargar-contenido-desde-el-admin)).
 
 ## Ejecutar el servidor
 
