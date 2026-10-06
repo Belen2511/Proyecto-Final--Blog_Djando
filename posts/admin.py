@@ -5,4 +5,4 @@ from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display = ("titulo", "autor", "likes", "creado")
+    list_display = ("titulo", "autor", "likes", "estado", "fecha_creacion")
