@@ -1,5 +1,7 @@
 {% extends "posts/base.html" %}
 
+{% block title %}Publicaciones | Mi Blog{% endblock %}
+
 {% block content %}
 <div class="encabezado">
     <h1>Posts</h1>
@@ -16,7 +18,10 @@
 {% for post in posts %}
 <a class="card" href="{% url 'detalle_post' post.pk %}">
     <h2>{{ post.titulo }}</h2>
-    <div class="meta">por {{ post.autor }} — {{ post.likes }} likes</div>
+    <p>{{ post.contenido|linebreaksbr }}</p>
+    <div class="meta">
+        por {{ post.autor }} — {{ post.get_estado_display }} — {{ post.fecha_creacion|date:"d/m/Y H:i" }} — {{ post.likes }} likes
+    </div>
 </a>
 {% empty %}
 <p class="stats">Todavía no hay posts.</p>
