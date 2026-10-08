@@ -211,6 +211,15 @@ el autor, el estado, la fecha de creación y los likes:
 {% endfor %}
 ```
 
+## Checkpoint: Modelos y Admin configurados
+
+Commit de este checkpoint: `Checkpoint: Modelos y Admin configurados.`
+
+En este punto del proyecto quedó listo:
+
+- El modelo `Post` (`titulo`, `contenido`, `autor`, `likes`, `fecha_creacion`, `estado`) definido en `posts/models.py`, con sus migraciones aplicadas.
+- El modelo `Post` registrado en el panel de administración (`posts/admin.py`), desde donde se pueden crear, editar y borrar publicaciones (ver la captura del admin en la sección [Capturas](#capturas)).
+
 ## Aplicaciones
 
 - `posts`: aplicación inicial para manejar las publicaciones del blog.
