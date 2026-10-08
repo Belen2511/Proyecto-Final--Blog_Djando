@@ -92,6 +92,16 @@ Páginas disponibles:
 
 Para detener el servidor: `Ctrl + C`.
 
+## Capturas
+
+Página de inicio (`/`):
+
+![Página de inicio del blog](capturas/pagina_inicio.png)
+
+Panel de administración de Django (`/admin/`), con el modelo `Post` registrado:
+
+![Panel de administración de Django](capturas/admin_django.png)
+
 ## Estructura
 
 ```
