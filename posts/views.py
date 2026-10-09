@@ -14,7 +14,7 @@ def acerca(request):
 
 
 def lista_posts(request):
-    posts = Post.objects.filter(estado="publicado").order_by("-fecha_creacion")
+    posts = Post.objects.filter(estado=Post.PUBLICADO).order_by("-fecha_creacion")
     promedio = posts.aggregate(promedio=Avg("likes"))["promedio"] or 0
     mas_popular = posts.order_by("-likes").first()
     context = {
