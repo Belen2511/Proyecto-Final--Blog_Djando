@@ -26,4 +26,16 @@
 {% empty %}
 <p class="stats">Todavía no hay posts.</p>
 {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav class="stats">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}">&laquo; Anterior</a>
+    {% endif %}
+    <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Siguiente &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
 {% endblock %}
