@@ -1,0 +1,12 @@
+{% extends "posts/base.html" %}
+{% block title %}{{ titulo_pagina }}{% endblock %}
+{% block content %}
+<h1>{{ titulo_pagina }}</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">{{ texto_boton }}</button>
+  <a href="{% url 'lista_posts' %}">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,11 +1,8 @@
-from django.core.paginator import Paginator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import PostForm
+from .forms import BuscarForm, ContactoForm, PostForm
 from .models import Post
-
-POSTS_POR_PAGINA = 5
 
 
 def inicio(request):
@@ -17,30 +14,75 @@ def acerca(request):
 
 
 def lista_posts(request):
-    posts = Post.objects.filter(estado=Post.PUBLICADO).order_by("-fecha_creacion")
-    promedio = posts.aggregate(promedio=Avg("likes"))["promedio"] or 0
-    mas_popular = posts.order_by("-likes").first()
-    page_obj = Paginator(posts, POSTS_POR_PAGINA).get_page(request.GET.get("page"))
-    context = {
-        "posts": page_obj,
-        "page_obj": page_obj,
-        "promedio": round(promedio, 1),
-        "mas_popular": mas_popular,
-    }
-    return render(request, "posts/lista_posts.html", context)
+    posts = Post.objects.all()
+    form = BuscarForm(request.GET or None)  # GET: unbound si no hay parámetros
+    if form.is_valid():
+        q = form.cleaned_data["q"]
+        autor = form.cleaned_data["autor"]
+        if q:
+            posts = posts.filter(titulo__icontains=q)
+        if autor:
+            posts = posts.filter(autor__iexact=autor)
+    return render(request, "posts/lista_posts.html", {"posts": posts, "form": form})
 
 
-def detalle_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    return render(request, "posts/detalle.html", {"post": post})
+def detalle_post(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    return render(request, "posts/detalle_post.html", {"post": post})
 
 
-def nuevo_post(request):
+def crear_post(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect("lista_posts")
+            post = form.save()
+            return redirect("detalle_post", slug=post.slug)
     else:
         form = PostForm()
-    return render(request, "posts/nuevo.html", {"form": form})
+    return render(request, "posts/post_form.html", {
+        "form": form, "titulo_pagina": "Crear post", "texto_boton": "Crear",
+    })
+
+
+def editar_post(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)  # instance => UPDATE, no INSERT
+        if form.is_valid():
+            form.save()
+            return redirect("detalle_post", slug=post.slug)
+    else:
+        form = PostForm(instance=post)
+    return render(request, "posts/post_form.html", {
+        "form": form, "titulo_pagina": "Editar post", "texto_boton": "Guardar cambios",
+    })
+
+
+def eliminar_post(request, slug):
+    post = get_object_or_404(Post, slug=slug)
+    if request.method == "POST":
+        post.delete()
+        return redirect("lista_posts")
+    return render(request, "posts/post_confirm_delete.html", {"post": post})
+
+
+def estadisticas(request):
+    """Equivalente a la opción 5 del menú de consola, pero con el ORM."""
+    posts = Post.objects.all()
+    contexto = {
+        "total": posts.count(),
+        "promedio": posts.aggregate(p=Avg("likes"))["p"],
+        "mas_popular": posts.order_by("-likes").first(),
+    }
+    return render(request, "posts/estadisticas.html", contexto)
+
+
+def contacto(request):
+    if request.method == "POST":
+        form = ContactoForm(request.POST)
+        if form.is_valid():
+            nombre = form.cleaned_data["nombre"]
+            return render(request, "posts/contacto_exito.html", {"nombre": nombre})
+    else:
+        form = ContactoForm()
+    return render(request, "posts/contacto.html", {"form": form})

@@ -1,0 +1,7 @@
+{% extends "posts/base.html" %}
+{% block title %}Mensaje enviado{% endblock %}
+{% block content %}
+<h1>Mensaje enviado</h1>
+<p>Gracias por contactarte, {{ nombre }}.</p>
+<p><a href="{% url 'lista_posts' %}">Volver a los posts</a></p>
+{% endblock %}

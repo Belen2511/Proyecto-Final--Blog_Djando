@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 
 class ContenidoBase(models.Model):
@@ -24,6 +25,7 @@ class Post(ContenidoBase):
     ]
 
     titulo = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
     contenido = models.TextField(blank=True)
     estado = models.CharField(
         max_length=10,
@@ -36,6 +38,16 @@ class Post(ContenidoBase):
 
     def __str__(self):
         return self.titulo
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.titulo)[:200] or "post"
+            slug, n = base, 2
+            while Post.objects.exclude(pk=self.pk).filter(slug=slug).exists():
+                slug = f"{base}-{n}"
+                n += 1
+            self.slug = slug
+        super().save(*args, **kwargs)
 
 
 class Comentario(ContenidoBase):

@@ -1,0 +1,12 @@
+{% extends "posts/base.html" %}
+{% block title %}Estadísticas{% endblock %}
+{% block content %}
+<h1>Estadísticas</h1>
+{% if total %}
+  <p>Total de posts: {{ total }}</p>
+  <p>Promedio de likes: {{ promedio|floatformat:1 }}</p>
+  <p>Más popular: <a href="{% url 'detalle_post' mas_popular.slug %}">{{ mas_popular.titulo }}</a> ({{ mas_popular.likes }} likes)</p>
+{% else %}
+  <p>Todavía no hay posts para calcular estadísticas.</p>
+{% endif %}
+{% endblock %}
