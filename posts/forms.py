@@ -6,7 +6,7 @@ from .models import Post
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ["titulo", "autor", "contenido", "likes"]
+        fields = ["titulo", "contenido", "autor", "estado", "imagen"]
 
 
 class BuscarForm(forms.Form):

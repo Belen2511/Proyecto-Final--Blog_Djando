@@ -85,9 +85,11 @@ Páginas disponibles:
 |------|-------------|
 | `/` | Página de inicio |
 | `/acerca/` | Acerca de (autor y propósito del sitio) |
-| `/posts/` | Listado de publicaciones publicadas |
-| `/post/<id>/` | Detalle de una publicación |
-| `/nuevo/` | Crear una publicación |
+| `/posts/` | Listado de publicaciones |
+| `/posts/<slug>/` | Detalle de una publicación |
+| `/posts/nuevo/` | Crear una publicación |
+| `/posts/<slug>/editar/` | Editar una publicación |
+| `/posts/<slug>/eliminar/` | Eliminar una publicación (pide confirmación) |
 | `/admin/` | Panel de administración |
 
 Para detener el servidor: `Ctrl + C`.
@@ -223,3 +225,59 @@ En este punto del proyecto quedó listo:
 ## Aplicaciones
 
 - `posts`: aplicación inicial para manejar las publicaciones del blog.
+
+## CRUD de posts con imágenes
+
+### Operaciones CRUD disponibles
+
+| Operación | Ruta | Vista |
+|-----------|------|-------|
+| Listar | `/posts/` | `lista_posts` |
+| Ver detalle | `/posts/<slug>/` | `detalle_post` |
+| Crear | `/posts/nuevo/` | `crear_post` |
+| Editar | `/posts/<slug>/editar/` | `editar_post` |
+| Borrar | `/posts/<slug>/eliminar/` | `eliminar_post` |
+
+Todos los templates (`lista_posts.html`, `detalle_post.html`, `post_form.html`,
+`post_confirm_delete.html`) extienden de `posts/base.html`. El formulario es
+`PostForm` (`posts/forms.py`, un `ModelForm`) con los campos `titulo`,
+`contenido`, `autor`, `estado` e `imagen`.
+
+### Manejo de imágenes
+
+- **Modelo:** `Post.imagen = models.ImageField(upload_to='posts/', null=True, blank=True)`.
+  Es opcional y los archivos se guardan en `media/posts/`.
+- **Settings:** `MEDIA_URL = '/media/'` y `MEDIA_ROOT = BASE_DIR / 'media'`.
+- **URLs:** en `blog_project/urls.py` se agrega `static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)`
+  (solo con `DEBUG=True`) para ver las imágenes en desarrollo.
+- **Vistas:** crear y editar instancian `PostForm(request.POST, request.FILES, ...)`
+  para procesar también el archivo subido.
+- **Template del formulario:** `<form method="post" enctype="multipart/form-data">`.
+- **Mostrar:** el listado y el detalle muestran la imagen solo si existe
+  (`{% if post.imagen %}`); si no, el post se ve igual sin romperse.
+- La carpeta `media/` está en `.gitignore`.
+
+### Nueva dependencia
+
+Se instaló **Pillow** (necesaria para `ImageField`) y se agregó a `requirements.txt`:
+
+```bash
+pip install Pillow
+```
+
+Después de actualizar el modelo hay que aplicar la migración (`0005_post_imagen`):
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### Cómo probar la carga de imágenes
+
+1. Ejecutar `python manage.py runserver`.
+2. Ir a `http://127.0.0.1:8000/posts/nuevo/`, completar el formulario y elegir una imagen.
+3. Al guardar se redirige al detalle, donde se ve la imagen; también aparece en el listado.
+4. Verificar que el archivo quedó en `media/posts/`.
+5. Editar el post (`/posts/<slug>/editar/`) y cambiar la imagen.
+6. Crear otro post sin imagen y comprobar que se muestra sin errores.
+7. Eliminar un post desde `/posts/<slug>/eliminar/`.

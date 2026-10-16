@@ -32,6 +32,7 @@ class Post(ContenidoBase):
         choices=ESTADOS,
         default=BORRADOR,
     )
+    imagen = models.ImageField(upload_to="posts/", null=True, blank=True)
 
     class Meta(ContenidoBase.Meta):
         pass

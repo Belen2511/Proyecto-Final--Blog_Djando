@@ -33,7 +33,7 @@ def detalle_post(request, slug):
 
 def crear_post(request):
     if request.method == "POST":
-        form = PostForm(request.POST)
+        form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save()
             return redirect("detalle_post", slug=post.slug)
@@ -47,7 +47,7 @@ def crear_post(request):
 def editar_post(request, slug):
     post = get_object_or_404(Post, slug=slug)
     if request.method == "POST":
-        form = PostForm(request.POST, instance=post)  # instance => UPDATE, no INSERT
+        form = PostForm(request.POST, request.FILES, instance=post)  # instance => UPDATE, no INSERT
         if form.is_valid():
             form.save()
             return redirect("detalle_post", slug=post.slug)

@@ -23,3 +23,6 @@ main p { line-height: 1.6; color: #d4d4d8; }
 form p { display: flex; flex-direction: column; gap: 6px; }
 input, textarea { background: #212124; color: #e4e4e7; border: 1px solid #333338; border-radius: 6px; padding: 8px; font: inherit; }
 .volver { color: #a1a1aa; display: inline-block; margin-top: 16px; }
+
+.imagen-post { max-width: 100%; height: auto; border-radius: 6px; margin: 1rem 0; }
+.miniatura { max-width: 240px; height: auto; border-radius: 6px; }
