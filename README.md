@@ -5,7 +5,7 @@ Proyecto base de un blog web desarrollado con Django.
 ## Descripción
 
 Este repositorio contiene la estructura inicial de un proyecto Django para construir un blog.
-Incluye la configuración base del proyecto (`blog_project`) y una aplicación llamada `posts`.
+Incluye la configuración base del proyecto (`Config`) y una aplicación llamada `posts`.
 
 Configuración regional:
 
@@ -113,7 +113,7 @@ blog_django/
 ├── README.md
 ├── requirements.txt
 │
-├── blog_project/
+├── Config/
 │   ├── settings.py
 │   └── urls.py
 │
@@ -248,7 +248,7 @@ Todos los templates (`lista_posts.html`, `detalle_post.html`, `post_form.html`,
 - **Modelo:** `Post.imagen = models.ImageField(upload_to='posts/', null=True, blank=True)`.
   Es opcional y los archivos se guardan en `media/posts/`.
 - **Settings:** `MEDIA_URL = '/media/'` y `MEDIA_ROOT = BASE_DIR / 'media'`.
-- **URLs:** en `blog_project/urls.py` se agrega `static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)`
+- **URLs:** en `Config/urls.py` se agrega `static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)`
   (solo con `DEBUG=True`) para ver las imágenes en desarrollo.
 - **Vistas:** crear y editar instancian `PostForm(request.POST, request.FILES, ...)`
   para procesar también el archivo subido.
