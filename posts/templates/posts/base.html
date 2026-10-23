@@ -9,15 +9,16 @@
 </head>
 <head>
       <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
-    nav a { margin-right: 1rem; }
-    .errorlist { color: #b00020; margin: 0.25rem 0; padding-left: 1rem; }
+      .errorlist { color: #b00020; margin: 0.25rem 0; padding-left: 1rem; }
     form p { margin: 0.75rem 0; }
     input[type=text], input[type=email], input[type=number], textarea, select { width: 100%; padding: 0.4rem; box-sizing: border-box; }
     .acciones a, .acciones button { margin-right: 0.75rem; }
-    .meta { color: #666; font-size: 0.9rem; }
-    .Session {float:right;}
+    .sesion { float: right; }
     form.inline { display: inline; }
+    .mensajes { list-style: none; padding: 0.5rem 1rem; background: #e8f5e9; border-radius: 4px; }
+    .mensajes:empty { display: none; }
+    .meta { color: #666; font-size: 0.9rem; }
+
   </style>
 </head>
 <body>
@@ -39,6 +40,7 @@
                             <button type="submit">Cerrar sesión</button>
                     {% else %}
                         <li><a href="{% url 'Login' %}">Iniciar sesión</a></li>
+                        <li><a href="{% url 'registro' %}">Registrarse</a></li>
                     {% endif %}
 
                 </span>
@@ -46,6 +48,9 @@
         </nav>
     </header>
     <main>
+          {% if messages %}
+    <ul class="mensajes">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+  {% endif %}
         {% block content %}{% endblock %}
     </main>
 </body>
