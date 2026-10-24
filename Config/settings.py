@@ -138,5 +138,5 @@ MAILERS = {
 }
 
 LOGIN_URL = "Login"
-LOGIN_REDIRECT_URL = "Lista_Posts"
-LOGOUT_REDIRECT_URL = "Lista_Posts"
+LOGIN_REDIRECT_URL = "lista_posts"
+LOGOUT_REDIRECT_URL = "lista_posts"

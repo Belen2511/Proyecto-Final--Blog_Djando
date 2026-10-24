@@ -1,11 +1,14 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
 
 
 class ContenidoBase(models.Model):
     """Modelo abstracto con los campos comunes de Post y Comentario."""
 
-    autor = models.CharField(max_length=100)
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="comentarios"
+    )
     likes = models.PositiveIntegerField(default=0)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
@@ -27,6 +30,9 @@ class Post(ContenidoBase):
     titulo = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     contenido = models.TextField(blank=True)
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
+    )
     estado = models.CharField(
         max_length=10,
         choices=ESTADOS,

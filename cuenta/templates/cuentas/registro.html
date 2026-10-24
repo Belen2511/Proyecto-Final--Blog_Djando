@@ -1,6 +1,6 @@
 {% extends "posts/base.html" %}
-{% block titulo %}Crear cuenta{% endblock %}
-{% block contenido %}
+{% block title %}Crear cuenta{% endblock %}
+{% block content %}
 <h1>Crear cuenta</h1>
 
 <form method="post">
@@ -8,5 +8,5 @@
   {{ form.as_p }}
   <button type="submit">Registrarme</button>
 </form>
-<p>¿Ya tenés cuenta? <a href="{% url 'login' %}">Ingresá</a></p>
+<p>¿Ya tenés cuenta? <a href="{% url 'Login' %}">Ingresá</a></p>
 {% endblock %}

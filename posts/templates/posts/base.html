@@ -28,7 +28,11 @@
             <ul>
                 <li><a href="{% url 'inicio' %}">Inicio</a></li>
                 <li><a href="{% url 'lista_posts' %}">Publicaciones</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'mis_posts' %}">Mis posts</a></li>
+                   {% if user.is_authenticated %}
                 <li><a href="{% url 'nuevo_post' %}">Nuevo post</a></li>
+                {% endif %}
                 <li><a href="{% url 'estadisticas' %}">Estadísticas</a></li>
                 <li><a href="{% url 'contacto' %}">Contacto</a></li>
                 <li><a href="{% url 'acerca' %}">Acerca de</a></li>

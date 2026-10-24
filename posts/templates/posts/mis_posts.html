@@ -1,0 +1,21 @@
+{% extends "posts/base.html" %}
+{% block titulo %}Mis posts{% endblock %}
+{% block contenido %}
+<h1>Mis posts</h1>
+<ul>
+  {% for post in posts %}
+    <li>
+      <a href="{% url 'detalle_post' post.slug %}">{{ post.titulo }}</a>
+      <span class="meta">{{ post.get_estado_display }} · {{ post.likes }} likes</span>
+      <span class="acciones">
+        <a href="{% url 'editar_post' post.slug %}">Editar</a>
+        <a href="{% url 'eliminar_post' post.slug %}">Eliminar</a>
+      </span>
+    </li>
+  {% empty %}
+    <li>Todavía no escribiste nada. <a href="{% url 'nuevo_post' %}">Creá tu primer post</a>.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+

@@ -19,7 +19,7 @@
     {% if post.imagen %}<img class="miniatura" src="{{ post.imagen.url }}" alt="{{ post.titulo }}">{% endif %}
     <p>{{ post.contenido|linebreaksbr }}</p>
     <div class="meta">
-        por {{ post.autor }} — {{ post.get_estado_display }} — {{ post.fecha_creacion|date:"d/m/Y H:i" }} — {{ post.likes }} likes
+        por {{ post.autor.username }} — {{ post.get_estado_display }} — {{ post.fecha_creacion|date:"d/m/Y H:i" }} — {{ post.likes }} likes
     </div>
 </a>
 {% empty %}
