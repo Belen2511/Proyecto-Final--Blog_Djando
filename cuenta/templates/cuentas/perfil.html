@@ -1,0 +1,22 @@
+{% extends "posts/base.html" %}
+{% block title %}Mi perfil{% endblock %}
+{% block content %}
+<h1>Mi perfil</h1>
+
+{% if perfil.avatar %}
+  <img src="{{ perfil.avatar.url }}" alt="Avatar de {{ user.username }}" class="avatar">
+{% else %}
+  <p class="meta">Todavía no subiste un avatar.</p>
+{% endif %}
+
+<p><strong>Usuario:</strong> {{ user.username }}</p>
+{% if user.get_full_name %}<p><strong>Nombre:</strong> {{ user.get_full_name }}</p>{% endif %}
+<p><strong>Email:</strong> {{ user.email|default:"(sin email)" }}</p>
+<p><strong>Biografía:</strong> {{ perfil.biografia|default:"(sin biografía)"|linebreaksbr }}</p>
+{% if perfil.link_web %}<p><strong>Sitio web:</strong> <a href="{{ perfil.link_web }}" target="_blank" rel="noopener">{{ perfil.link_web }}</a></p>{% endif %}
+
+<p class="acciones">
+  <a href="{% url 'editar_perfil' %}">Editar perfil</a>
+  <a href="{% url 'mis_posts' %}">Mis posts</a>
+</p>
+{% endblock %}

@@ -224,7 +224,8 @@ En este punto del proyecto quedó listo:
 
 ## Aplicaciones
 
-- `posts`: aplicación inicial para manejar las publicaciones del blog.
+- `posts`: publicaciones del blog (CRUD con imágenes).
+- `cuenta`: usuarios (registro, login, logout y perfil).
 
 ## CRUD de posts con imágenes
 
@@ -265,7 +266,7 @@ Se instaló **Pillow** (necesaria para `ImageField`) y se agregó a `requirement
 pip install Pillow
 ```
 
-Después de actualizar el modelo hay que aplicar la migración (`0005_post_imagen`):
+Después de actualizar el modelo hay que aplicar las migraciones:
 
 ```bash
 python manage.py makemigrations
@@ -281,3 +282,105 @@ python manage.py migrate
 5. Editar el post (`/posts/<slug>/editar/`) y cambiar la imagen.
 6. Crear otro post sin imagen y comprobar que se muestra sin errores.
 7. Eliminar un post desde `/posts/<slug>/eliminar/`.
+
+## Usuarios, autenticación y perfil (Preentrega 11)
+
+Todo lo relacionado con usuarios está en la app `cuenta` (registrada en
+`INSTALLED_APPS`) y usa el sistema de autenticación de Django (`django.contrib.auth`).
+
+### Migraciones
+
+Después de clonar o actualizar el proyecto hay que aplicar las migraciones
+(incluyen la tabla del modelo `Perfil`):
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### Rutas de usuarios
+
+| Ruta | Vista | Descripción |
+|------|-------|-------------|
+| `/cuenta/registro/` | `registro` | Crear una cuenta nueva |
+| `/cuenta/login/` | `LoginView` (nativa) | Iniciar sesión |
+| `/cuenta/logout/` | `LogoutView` (nativa) | Cerrar sesión (POST) |
+| `/cuenta/perfil/` | `perfil` | Ver mi perfil (requiere login) |
+| `/cuenta/perfil/editar/` | `editar_perfil` | Editar mi perfil (requiere login) |
+
+### Registro
+
+`RegistroForm` (`cuenta/forms.py`) extiende `UserCreationForm` y agrega el campo
+`email` (obligatorio y sin repetir). La vista `registro` guarda el usuario,
+crea su perfil con `Perfil.objects.create(user=usuario)`, inicia la sesión
+automáticamente y redirige a **Mi perfil**. No se usan signals.
+
+### Login y logout
+
+- **Login:** `/cuenta/login/` usa `LoginView` con el template propio
+  `cuenta/templates/registration/login.html`, que extiende de `posts/base.html`.
+- **Logout:** botón **Cerrar sesión** del menú, que envía un POST a `LogoutView`.
+- Redirecciones en `Config/settings.py`:
+
+```python
+LOGIN_URL = "Login"
+LOGIN_REDIRECT_URL = "lista_posts"
+LOGOUT_REDIRECT_URL = "lista_posts"
+```
+
+### Modelo Perfil
+
+Definido en `cuenta/models.py` y registrado en el admin (`cuenta/admin.py`):
+
+```python
+class Perfil(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="perfil")
+    biografia = models.TextField(blank=True)
+    link_web = models.URLField(blank=True)
+    avatar = models.ImageField(upload_to="avatares/", null=True, blank=True)
+```
+
+La relación `OneToOneField` garantiza que cada usuario tenga un único perfil.
+Las vistas de perfil usan `Perfil.objects.get_or_create(user=request.user)`,
+así también funcionan para usuarios creados antes del modelo o desde el admin.
+
+### Avatares
+
+- El avatar se guarda en `media/avatares/` (usa `MEDIA_URL` y `MEDIA_ROOT`, los mismos de las imágenes de los posts).
+- `editar_perfil` procesa el archivo con `PerfilForm(request.POST, request.FILES, instance=perfil)`
+  y el template usa `enctype="multipart/form-data"`.
+- La página de perfil y el menú muestran el avatar solo si existe (`{% if perfil.avatar %}`).
+- Desde **Editar perfil** también se pueden cambiar nombre, apellido y email.
+
+### Rutas protegidas
+
+Estas vistas usan `@login_required`. Si se entra sin sesión, redirigen a
+`/cuenta/login/?next=...` y, después de iniciar sesión, vuelven a la página pedida:
+
+| Ruta | Vista |
+|------|-------|
+| `/posts/nuevo/` | `crear_post` |
+| `/posts/<slug>/editar/` | `editar_post` (además, solo el autor o un usuario con permiso `posts.change_post`) |
+| `/posts/<slug>/eliminar/` | `eliminar_post` (además, solo el autor o un usuario con permiso `posts.change_post`) |
+| `/mis-posts/` | `mis_posts` |
+| `/cuenta/perfil/` | `perfil` |
+| `/cuenta/perfil/editar/` | `editar_perfil` |
+
+El listado (`/posts/`) y el detalle (`/posts/<slug>/`) siguen siendo públicos.
+
+### Navegación
+
+El menú de `posts/base.html` cambia según `user.is_authenticated`:
+
+- **Visitante anónimo:** Iniciar sesión, Registrarse.
+- **Usuario logueado:** Crear post, Mis posts, Mi perfil (con su avatar), "Hola, usuario" y Cerrar sesión.
+
+### Tests
+
+```bash
+python manage.py test
+```
+
+`cuenta/tests.py` prueba el registro (con creación del perfil), el login y el logout,
+la redirección al login de las rutas protegidas, que el listado y el detalle sean
+públicos, la subida del avatar y el CRUD de posts con un usuario logueado.

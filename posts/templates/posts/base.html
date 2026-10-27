@@ -6,20 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mi Blog{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'posts/css/estilos.css' %}">
-</head>
-<head>
-      <style>
-      .errorlist { color: #b00020; margin: 0.25rem 0; padding-left: 1rem; }
-    form p { margin: 0.75rem 0; }
-    input[type=text], input[type=email], input[type=number], textarea, select { width: 100%; padding: 0.4rem; box-sizing: border-box; }
-    .acciones a, .acciones button { margin-right: 0.75rem; }
-    .sesion { float: right; }
-    form.inline { display: inline; }
-    .mensajes { list-style: none; padding: 0.5rem 1rem; background: #e8f5e9; border-radius: 4px; }
-    .mensajes:empty { display: none; }
-    .meta { color: #666; font-size: 0.9rem; }
-
-  </style>
+    <style>
+        .errorlist { color: #b00020; margin: 0.25rem 0; padding-left: 1rem; }
+        form p { margin: 0.75rem 0; }
+        input[type=text], input[type=email], input[type=number], input[type=url], input[type=password], textarea, select { width: 100%; padding: 0.4rem; box-sizing: border-box; }
+        .acciones a, .acciones button { margin-right: 0.75rem; }
+        form.inline { display: inline; }
+        .mensajes { list-style: none; padding: 0.5rem 1rem; background: #e8f5e9; border-radius: 4px; }
+        .meta { color: #666; font-size: 0.9rem; }
+        .avatar { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; }
+        .avatar-mini { width: 28px; height: 28px; object-fit: cover; border-radius: 50%; vertical-align: middle; }
+    </style>
 </head>
 <body>
     <header>
@@ -28,33 +25,36 @@
             <ul>
                 <li><a href="{% url 'inicio' %}">Inicio</a></li>
                 <li><a href="{% url 'lista_posts' %}">Publicaciones</a></li>
-                {% if user.is_authenticated %}
-                <li><a href="{% url 'mis_posts' %}">Mis posts</a></li>
-                   {% if user.is_authenticated %}
-                <li><a href="{% url 'nuevo_post' %}">Nuevo post</a></li>
-                {% endif %}
                 <li><a href="{% url 'estadisticas' %}">Estadísticas</a></li>
                 <li><a href="{% url 'contacto' %}">Contacto</a></li>
                 <li><a href="{% url 'acerca' %}">Acerca de</a></li>
-                <span class = "Session">
-                    {% if user.is_authenticated %}
-                    hola, {{ user.username }}!
-                        <form method="post" action="{% url 'Logout' %}">
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'nuevo_post' %}">Crear post</a></li>
+                    <li><a href="{% url 'mis_posts' %}">Mis posts</a></li>
+                    <li>
+                        <a href="{% url 'perfil' %}">
+                            {% if user.perfil.avatar %}<img src="{{ user.perfil.avatar.url }}" alt="" class="avatar-mini">{% endif %}
+                            Mi perfil
+                        </a>
+                    </li>
+                    <li class="meta">Hola, {{ user.username }}</li>
+                    <li>
+                        <form method="post" action="{% url 'Logout' %}" class="inline">
                             {% csrf_token %}
                             <button type="submit">Cerrar sesión</button>
-                    {% else %}
-                        <li><a href="{% url 'Login' %}">Iniciar sesión</a></li>
-                        <li><a href="{% url 'registro' %}">Registrarse</a></li>
-                    {% endif %}
-
-                </span>
+                        </form>
+                    </li>
+                {% else %}
+                    <li><a href="{% url 'Login' %}">Iniciar sesión</a></li>
+                    <li><a href="{% url 'registro' %}">Registrarse</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
     <main>
-          {% if messages %}
-    <ul class="mensajes">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
-  {% endif %}
+        {% if messages %}
+            <ul class="mensajes">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 </body>
