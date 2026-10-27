@@ -283,7 +283,7 @@ python manage.py migrate
 6. Crear otro post sin imagen y comprobar que se muestra sin errores.
 7. Eliminar un post desde `/posts/<slug>/eliminar/`.
 
-## Usuarios, autenticación y perfil (Preentrega 11)
+## Usuarios, autenticación y perfil 
 
 Todo lo relacionado con usuarios está en la app `cuenta` (registrada en
 `INSTALLED_APPS`) y usa el sistema de autenticación de Django (`django.contrib.auth`).
