@@ -5,7 +5,7 @@ Proyecto base de un blog web desarrollado con Django.
 ## Descripción
 
 Este repositorio contiene la estructura inicial de un proyecto Django para construir un blog.
-Incluye la configuración base del proyecto (`Config`) y una aplicación llamada `posts`.
+Incluye la configuración base del proyecto (`Config`) y dos aplicaciones: `posts` (publicaciones) y `cuenta` (usuarios y perfiles).
 
 Configuración regional:
 
@@ -105,29 +105,56 @@ blog_django/
 │
 ├── Config/
 │   ├── settings.py
-│   └── urls.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
 │
-└── posts/
+├── posts/
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── migrations/
+│   │
+│   ├── templates/
+│   │   └── posts/
+│   │       ├── base.html
+│   │       ├── inicio.html
+│   │       ├── acerca.html
+│   │       ├── lista_posts.html
+│   │       ├── detalle_post.html
+│   │       ├── mis_posts.html
+│   │       ├── post_form.html
+│   │       ├── post_confirm_delete.html
+│   │       ├── estadisticas.html
+│   │       ├── contacto.html
+│   │       └── contacto_exito.html
+│   │
+│   └── static/
+│       └── posts/
+│           └── css/
+│               └── estilos.css
+│
+└── cuenta/
     ├── admin.py
     ├── apps.py
     ├── forms.py
     ├── models.py
+    ├── tests.py
     ├── urls.py
     ├── views.py
+    ├── migrations/
     │
-    ├── templates/
-    │   └── posts/
-    │       ├── base.html
-    │       ├── inicio.html
-    │       ├── lista_posts.html
-    │       ├── detalle.html
-    │       ├── nuevo.html
-    │       └── acerca.html
-    │
-    └── static/
-        └── posts/
-            └── css/
-                └── estilos.css
+    └── templates/
+        ├── cuentas/
+        │   ├── registro.html
+        │   ├── perfil.html
+        │   └── editar_perfil.html
+        └── registration/
+            └── login.html
 ```
 
 ## Modelo Post
@@ -160,24 +187,27 @@ Conviene cargar al menos 3 posts con distintos datos y estados para probar el li
 
 ## Consultar posts con el ORM
 
-La view `lista_posts` (en `posts/views.py`) trae desde la base de datos solo los
-posts publicados, del más reciente al más antiguo, y los envía al template
-mediante el contexto:
+La view `lista_posts` (en `posts/views.py`) trae los posts desde la base de datos
+(ordenados del más reciente al más antiguo, por el `ordering` del modelo) y permite
+buscarlos por título y por autor con el formulario `BuscarForm`:
 
 ```python
 def lista_posts(request):
-    posts = Post.objects.filter(estado="publicado").order_by("-fecha_creacion")
-    promedio = posts.aggregate(promedio=Avg("likes"))["promedio"] or 0
-    mas_popular = posts.order_by("-likes").first()
-    context = {
-        "posts": posts,
-        "promedio": round(promedio, 1),
-        "mas_popular": mas_popular,
-    }
-    return render(request, "posts/lista_posts.html", context)
+    posts = Post.objects.select_related("autor").all()  # select_related => JOIN para optimizar consultas
+    form = BuscarForm(request.GET or None)  # GET: unbound si no hay parámetros
+    if form.is_valid():
+        q = form.cleaned_data["q"]
+        autor = form.cleaned_data["autor"]
+        if q:
+            posts = posts.filter(titulo__icontains=q)
+        if autor:
+            posts = posts.filter(autor__username__icontains=autor)
+    return render(request, "posts/lista_posts.html", {"posts": posts, "form": form})
 ```
 
-Los posts en estado borrador o archivado no aparecen en `/posts/`.
+- `?q=django` filtra los posts cuyo título contiene "django" (sin distinguir mayúsculas).
+- `?autor=ana` filtra por el nombre de usuario del autor.
+- El listado no filtra por estado: muestra todos los posts y el estado se ve en cada tarjeta.
 
 ## Templates y estilos
 
@@ -191,15 +221,16 @@ el autor, el estado, la fecha de creación y los likes:
 
 ```html
 {% for post in posts %}
-<a class="card" href="{% url 'detalle_post' post.pk %}">
+<a class="card" href="{% url 'detalle_post' post.slug %}">
     <h2>{{ post.titulo }}</h2>
+    {% if post.imagen %}<img class="miniatura" src="{{ post.imagen.url }}" alt="{{ post.titulo }}">{% endif %}
     <p>{{ post.contenido|linebreaksbr }}</p>
     <div class="meta">
-        por {{ post.autor }} — {{ post.get_estado_display }} — {{ post.fecha_creacion|date:"d/m/Y H:i" }} — {{ post.likes }} likes
+        por {{ post.autor.username }} — {{ post.get_estado_display }} — {{ post.fecha_creacion|date:"d/m/Y H:i" }} — {{ post.likes }} likes
     </div>
 </a>
 {% empty %}
-<p class="stats">Todavía no hay posts.</p>
+<p class="stats">No hay posts que coincidan.</p>
 {% endfor %}
 ```
 
@@ -232,7 +263,8 @@ En este punto del proyecto quedó listo:
 Todos los templates (`lista_posts.html`, `detalle_post.html`, `post_form.html`,
 `post_confirm_delete.html`) extienden de `posts/base.html`. El formulario es
 `PostForm` (`posts/forms.py`, un `ModelForm`) con los campos `titulo`,
-`contenido`, `autor`, `estado` e `imagen`.
+`contenido`, `estado` e `imagen`. El autor no se elige en el formulario: la vista
+`crear_post` lo asigna con el usuario logueado (`post.autor = request.user`).
 
 ### Manejo de imágenes
 
@@ -301,9 +333,10 @@ python manage.py migrate
 ### Registro
 
 `RegistroForm` (`cuenta/forms.py`) extiende `UserCreationForm` y agrega el campo
-`email` (obligatorio y sin repetir). La vista `registro` guarda el usuario,
-crea su perfil con `Perfil.objects.create(user=usuario)`, inicia la sesión
-automáticamente y redirige a **Mi perfil**. No se usan signals.
+`email` (obligatorio y sin repetir). La vista `registro` guarda el usuario y
+crea su perfil dentro de un `transaction.atomic()` (si falla el perfil, tampoco
+se guarda el usuario), inicia la sesión automáticamente y redirige a **Mi perfil**.
+No se usan signals.
 
 ### Login y logout
 
@@ -331,8 +364,17 @@ class Perfil(models.Model):
 ```
 
 La relación `OneToOneField` garantiza que cada usuario tenga un único perfil.
-Las vistas de perfil usan `Perfil.objects.get_or_create(user=request.user)`,
-así también funcionan para usuarios creados antes del modelo o desde el admin.
+
+### Usuarios sin perfil (casos límite)
+
+Para que ningún usuario quede sin perfil:
+
+| Caso | Cómo se cubre |
+|------|---------------|
+| Registro desde `/cuenta/registro/` | La vista crea el perfil en la misma transacción que el usuario. |
+| Usuarios creados antes de existir el modelo `Perfil` | La migración `cuenta/migrations/0002_crear_perfiles_faltantes.py` les crea un perfil vacío al correr `migrate`. |
+| Usuarios creados desde el admin | El admin de usuarios (`cuenta/admin.py`) muestra el perfil en la misma ficha y, al guardar, lo crea si no existe. |
+| Cualquier otro caso (por ejemplo `createsuperuser`) | Las vistas de perfil usan `Perfil.objects.get_or_create(user=request.user)`, así que el perfil se crea la primera vez que el usuario entra. |
 
 ### Avatares
 
@@ -371,6 +413,7 @@ El menú de `posts/base.html` cambia según `user.is_authenticated`:
 python manage.py test
 ```
 
-`cuenta/tests.py` prueba el registro (con creación del perfil), el login y el logout,
+`cuenta/tests.py` prueba el registro (con creación del perfil), los casos límite
+de usuarios sin perfil (creados desde el admin o antes del modelo), el login y el logout,
 la redirección al login de las rutas protegidas, que el listado y el detalle sean
 públicos, la subida del avatar y el CRUD de posts con un usuario logueado.

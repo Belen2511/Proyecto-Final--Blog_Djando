@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import redirect, render
 
 from .forms import PerfilForm, RegistroForm, UsuarioForm
@@ -13,8 +14,10 @@ def registro(request):
     if request.method == "POST":
         form = RegistroForm(request.POST)
         if form.is_valid():
-            usuario = form.save()
-            Perfil.objects.create(user=usuario)  # el perfil se crea acá, sin signals
+            # atomic: si falla la creación del perfil, tampoco se guarda el usuario
+            with transaction.atomic():
+                usuario = form.save()
+                Perfil.objects.get_or_create(user=usuario)  # el perfil se crea acá, sin signals
             login(request, usuario)
             messages.success(request, f"¡Bienvenido, {usuario.username}!")
             return redirect("perfil")

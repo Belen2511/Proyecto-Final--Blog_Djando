@@ -80,3 +80,32 @@ class FlujoUsuarioTests(TestCase):
         self.assertEqual(post.titulo, "Editado")
         self.client.post(reverse("eliminar_post", args=[post.slug]))
         self.assertFalse(Post.objects.filter(pk=post.pk).exists())
+
+
+class PerfilCasosLimiteTests(TestCase):
+    """Ningún usuario debería quedar sin perfil."""
+
+    def test_usuario_creado_desde_el_admin_tiene_perfil(self):
+        admin = User.objects.create_superuser("admin", "admin@test.com", "x")
+        self.client.force_login(admin)
+        self.client.post(reverse("admin:auth_user_add"), {
+            "username": "gaby", "password1": "ClaveSegura123!", "password2": "ClaveSegura123!",
+            "usable_password": "true",
+            "perfil-TOTAL_FORMS": "0", "perfil-INITIAL_FORMS": "0",
+            "perfil-MIN_NUM_FORMS": "0", "perfil-MAX_NUM_FORMS": "1",
+        })
+        self.assertTrue(Perfil.objects.filter(user__username="gaby").exists())
+
+    def test_migracion_crea_perfiles_faltantes(self):
+        import importlib
+        from django.apps import apps
+        migracion = importlib.import_module("cuenta.migrations.0002_crear_perfiles_faltantes")
+        viejo = User.objects.create_user("hugo", password="x")  # usuario sin perfil
+        migracion.crear_perfiles_faltantes(apps, None)
+        self.assertTrue(Perfil.objects.filter(user=viejo).exists())
+
+    def test_usuario_sin_perfil_puede_ver_su_perfil(self):
+        user = User.objects.create_user("ines", password="x")
+        self.client.force_login(user)
+        self.assertEqual(self.client.get(reverse("perfil")).status_code, 200)
+        self.assertTrue(Perfil.objects.filter(user=user).exists())
