@@ -94,16 +94,6 @@ Páginas disponibles:
 
 Para detener el servidor: `Ctrl + C`.
 
-## Capturas
-
-Página de inicio (`/`):
-
-![Página de inicio del blog](capturas/pagina_inicio.png)
-
-Panel de administración de Django (`/admin/`), con el modelo `Post` registrado:
-
-![Panel de administración de Django](capturas/admin_django.png)
-
 ## Estructura
 
 ```
@@ -220,7 +210,7 @@ Commit de este checkpoint: `Checkpoint: Modelos y Admin configurados.`
 En este punto del proyecto quedó listo:
 
 - El modelo `Post` (`titulo`, `contenido`, `autor`, `likes`, `fecha_creacion`, `estado`) definido en `posts/models.py`, con sus migraciones aplicadas.
-- El modelo `Post` registrado en el panel de administración (`posts/admin.py`), desde donde se pueden crear, editar y borrar publicaciones (ver la captura del admin en la sección [Capturas](#capturas)).
+- El modelo `Post` registrado en el panel de administración (`posts/admin.py`), desde donde se pueden crear, editar y borrar publicaciones.
 
 ## Aplicaciones
 
@@ -283,7 +273,7 @@ python manage.py migrate
 6. Crear otro post sin imagen y comprobar que se muestra sin errores.
 7. Eliminar un post desde `/posts/<slug>/eliminar/`.
 
-## Usuarios, autenticación y perfil 
+## Usuarios, autenticación y perfil (Preentrega 11)
 
 Todo lo relacionado con usuarios está en la app `cuenta` (registrada en
 `INSTALLED_APPS`) y usa el sistema de autenticación de Django (`django.contrib.auth`).
