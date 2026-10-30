@@ -213,6 +213,7 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv(
 | `SECRET_KEY` | Clave que Django usa para sesiones y protección de formularios. Es obligatoria. |
 | `DEBUG` | `True` en desarrollo (muestra errores detallados). En un sitio publicado debería ser `False`. |
 | `ALLOWED_HOSTS` | Dominios desde los que se puede acceder al sitio, separados por coma. |
+| `CSRF_TRUSTED_ORIGINS` | Solo en producción: la dirección con `https://` del sitio publicado. |
 
 - `.env` tiene los valores reales y **no se sube** a GitHub.
 - `.env.example` muestra qué variables hay que completar y **sí se sube**.
@@ -556,3 +557,117 @@ el perfil (también para superusuarios y sin duplicarlo), los casos límite de u
 sin perfil, el perfil público (solo posts publicados y 404 si no existe), cambiar y
 recuperar la contraseña por mail, el login y el logout, la redirección al login de
 las rutas protegidas, la subida del avatar, **Mis posts** y el CRUD de posts.
+
+## Publicar en PythonAnywhere
+
+El sitio se puede publicar gratis en [PythonAnywhere](https://www.pythonanywhere.com/).
+En todos los pasos, reemplazar `USUARIO` por tu nombre de usuario de PythonAnywhere.
+La dirección del sitio queda `https://USUARIO.pythonanywhere.com`.
+
+### Qué tiene el proyecto para producción
+
+- `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` se leen del `.env`.
+- `STATIC_ROOT = BASE_DIR / "staticfiles"`: ahí `collectstatic` junta los CSS (los del blog y los del admin).
+- Con `DEBUG=False` se activan cookies seguras (solo HTTPS) y HSTS. `python manage.py check --deploy` no da avisos.
+- Las imágenes subidas (`media/`) quedan guardadas en el disco de PythonAnywhere, que no se borra.
+
+### 1. Descargar el proyecto y crear el entorno virtual
+
+En PythonAnywhere, abrir **Consoles → Bash** y ejecutar:
+
+```bash
+git clone https://github.com/Belen2511/Proyecto-Final--Blog_Djando.git
+cd Proyecto-Final--Blog_Djando
+mkvirtualenv --python=/usr/bin/python3.13 blog-venv
+pip install -r requirements.txt
+```
+
+Django 6.1 necesita Python 3.12 o más nuevo. Si `python3.13` no existe, cambiar la
+imagen del sistema en **Account → System image** por la más nueva.
+
+### 2. Crear el `.env` de producción
+
+Generar una clave secreta nueva:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(60))"
+```
+
+Crear el archivo con `nano .env` (al lado de `manage.py`) y pegar, con la clave generada:
+
+```
+SECRET_KEY=la-clave-generada
+DEBUG=False
+ALLOWED_HOSTS=USUARIO.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS=https://USUARIO.pythonanywhere.com
+```
+
+Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
+
+### 3. Base de datos, estáticos y administrador
+
+```bash
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py createsuperuser
+python manage.py check --deploy
+```
+
+### 4. Crear la aplicación web
+
+En la pestaña **Web**:
+
+1. **Add a new web app** → **Manual configuration** (no elegir "Django") → **Python 3.13**.
+2. **Code → Source code:** `/home/USUARIO/Proyecto-Final--Blog_Djando`
+3. **Virtualenv:** `/home/USUARIO/.virtualenvs/blog-venv`
+4. **Code → WSGI configuration file:** abrir el archivo, borrar todo y pegar:
+
+```python
+import os
+import sys
+
+path = "/home/USUARIO/Proyecto-Final--Blog_Djando"
+if path not in sys.path:
+    sys.path.insert(0, path)
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "Config.settings"
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+```
+
+5. **Static files:** agregar dos filas.
+
+| URL | Directory |
+|-----|-----------|
+| `/static/` | `/home/USUARIO/Proyecto-Final--Blog_Djando/staticfiles` |
+| `/media/` | `/home/USUARIO/Proyecto-Final--Blog_Djando/media` |
+
+6. **Security → Force HTTPS:** activado.
+7. Apretar el botón verde **Reload** y entrar a `https://USUARIO.pythonanywhere.com`.
+
+### Actualizar el sitio después de subir cambios a GitHub
+
+En la consola Bash de PythonAnywhere:
+
+```bash
+cd ~/Proyecto-Final--Blog_Djando
+workon blog-venv
+git pull
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py collectstatic --noinput
+```
+
+Después, **Reload** en la pestaña **Web**.
+
+### Si algo falla
+
+- **Error log** (pestaña **Web**): muestra el error de Python si la página no carga.
+- **Server log:** ahí aparecen los mails de "recuperar contraseña", porque en este proyecto
+  los mails salen por consola y no se envían de verdad.
+- **"Bad Request (400)":** revisar `ALLOWED_HOSTS` en el `.env`.
+- **"CSRF verification failed" al enviar un formulario:** revisar `CSRF_TRUSTED_ORIGINS`.
+- **El sitio se ve sin estilos:** revisar `collectstatic` y la fila `/static/` en **Static files**.
+- En la cuenta gratis, el sitio se desactiva si no se entra a la pestaña **Web** y se aprieta
+  **Run until 3 months from today** cada tanto.

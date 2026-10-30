@@ -29,6 +29,9 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
 
+# Orígenes con HTTPS desde los que se aceptan formularios (ej. https://usuario.pythonanywhere.com)
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+
 
 # Application definition
 
@@ -119,6 +122,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+# Carpeta donde `collectstatic` junta todos los estáticos (la usa el servidor en producción)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Archivos subidos por los usuarios (imágenes de los posts)
 MEDIA_URL = '/media/'
@@ -140,3 +145,18 @@ DEFAULT_FROM_EMAIL = "Mi Blog <no-responder@miblog.local>"
 LOGIN_URL = "Login"
 LOGIN_REDIRECT_URL = "lista_posts"
 LOGOUT_REDIRECT_URL = "lista_posts"
+
+
+# Producción (DEBUG=False): cookies solo por HTTPS y cabeceras de seguridad.
+# En PythonAnywhere el HTTPS se fuerza desde la pestaña Web ("Force HTTPS").
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = config("SECURE_HSTS_SECONDS", default=3600, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # security.W008: la redirección a HTTPS la hace PythonAnywhere ("Force HTTPS"), no Django.
+    # security.W021: "preload" no corresponde para un subdominio de pythonanywhere.com.
+    # mail.E001: los mails salen por consola (en PythonAnywhere, en el "Server log").
+    #            Para enviar mails reales hay que configurar SMTP y quitar esta línea.
+    SILENCED_SYSTEM_CHECKS = ["security.W008", "security.W021", "mail.E001"]
