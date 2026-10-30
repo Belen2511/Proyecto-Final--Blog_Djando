@@ -22,7 +22,7 @@ Configuración regional:
 Clonar el repositorio:
 
 ```bash
-git clone https://github.com/Belen2511/Preentrega-11--Blog_Djando.git
+gh repo clone Belen2511/Proyecto-Final--Blog_Djando
 ```
 
 Entrar a la carpeta del proyecto:
