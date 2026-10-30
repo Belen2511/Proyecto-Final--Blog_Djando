@@ -28,7 +28,7 @@ gh repo clone Belen2511/Proyecto-Final--Blog_Djando
 Entrar a la carpeta del proyecto:
 
 ```bash
-cd Preentrega-11--Blog_Djando
+cd Proyecto-Final--Blog_Djando
 ```
 
 Crear el entorno virtual:
