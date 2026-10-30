@@ -1,19 +1,35 @@
 # Entorno virtual
 venv/
 .venv/
+env/
 
 # Archivos temporales de Python
 __pycache__/
-*.pyc
+*.py[cod]
 
-# Variables de entorno
+# Variables de entorno (valores privados; .env.example sí se sube)
 .env
+!.env.example
 
-# Base de datos local
+# Base de datos local (se recrea con: python manage.py migrate)
 db.sqlite3
+db.sqlite3-journal
 
-# Editor
-.vscode/
-
-# Archivos subidos
+# Archivos subidos por los usuarios (imágenes de posts y avatares)
 media/
+
+# Archivos estáticos recolectados con collectstatic
+staticfiles/
+
+# Logs
+*.log
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

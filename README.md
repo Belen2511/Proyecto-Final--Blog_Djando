@@ -22,13 +22,13 @@ Configuración regional:
 Clonar el repositorio:
 
 ```bash
-git clone https://github.com/Belen2511/Proyecto-Blog_Django.git
+git clone https://github.com/Belen2511/Preentrega-11--Blog_Djando.git
 ```
 
 Entrar a la carpeta del proyecto:
 
 ```bash
-cd Proyecto-Blog_Django
+cd Preentrega-11--Blog_Djando
 ```
 
 Crear el entorno virtual:
@@ -57,7 +57,30 @@ Instalar las dependencias:
 pip install -r requirements.txt
 ```
 
-Crear la base de datos (aplica las migraciones del modelo `Post`):
+Crear el archivo `.env` a partir del ejemplo:
+
+En Windows PowerShell:
+
+```bash
+copy .env.example .env
+```
+
+En Linux o macOS:
+
+```bash
+cp .env.example .env
+```
+
+Después abrir `.env` y reemplazar `colocar-una-clave-secreta` por una clave propia.
+Se puede generar una con:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+(ver [Configuración segura](#configuración-segura)).
+
+Crear la base de datos (aplica las migraciones de `posts` y `cuenta`):
 
 ```bash
 python manage.py migrate
@@ -102,6 +125,8 @@ blog_django/
 ├── manage.py
 ├── README.md
 ├── requirements.txt
+├── .gitignore
+├── .env.example
 │
 ├── Config/
 │   ├── settings.py
@@ -155,6 +180,50 @@ blog_django/
         │   └── editar_perfil.html
         └── registration/
             └── login.html
+```
+
+Archivos como `.env`, `venv/`, `db.sqlite3` y `media/` existen solo en cada
+computadora y no se suben al repositorio (están en `.gitignore`).
+
+## Configuración segura
+
+Los datos privados no están escritos en `Config/settings.py`: se leen desde un
+archivo `.env` con la librería **python-decouple**.
+
+```python
+from decouple import Csv, config
+
+SECRET_KEY = config("SECRET_KEY")
+DEBUG = config("DEBUG", default=True, cast=bool)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv())
+```
+
+| Variable | Para qué sirve |
+|----------|----------------|
+| `SECRET_KEY` | Clave que Django usa para sesiones y protección de formularios. Es obligatoria. |
+| `DEBUG` | `True` en desarrollo (muestra errores detallados). En un sitio publicado debería ser `False`. |
+| `ALLOWED_HOSTS` | Dominios desde los que se puede acceder al sitio, separados por coma. |
+
+- `.env` tiene los valores reales y **no se sube** a GitHub.
+- `.env.example` muestra qué variables hay que completar y **sí se sube**.
+
+### Qué se sube y qué no
+
+| Se sube | No se sube (`.gitignore`) |
+|---------|---------------------------|
+| Código de `Config/`, `posts/` y `cuenta/` | `venv/` (entorno virtual) |
+| Migraciones | `__pycache__/` y `*.pyc` |
+| Templates y archivos estáticos | `.env` |
+| `requirements.txt`, `README.md`, `.gitignore`, `.env.example` | `db.sqlite3` (se recrea con `migrate`) |
+| | `media/` (imágenes subidas localmente) |
+
+### Dependencias
+
+`requirements.txt` incluye **Django**, **Pillow** (para `ImageField`) y
+**python-decouple** (para leer el `.env`). Se actualiza con:
+
+```bash
+pip freeze > requirements.txt
 ```
 
 ## Modelo Post
