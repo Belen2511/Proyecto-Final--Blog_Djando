@@ -1,0 +1,7 @@
+{% extends "posts/base.html" %}
+{% block title %}Sin permiso | Mi Blog{% endblock %}
+{% block content %}
+<h1>No tenés permiso para ver esta página</h1>
+<p>Tu usuario no tiene el permiso necesario. Si creés que es un error, pedile acceso a un administrador.</p>
+<a class="volver" href="{% url 'lista_posts' %}">← Volver a las publicaciones</a>
+{% endblock %}

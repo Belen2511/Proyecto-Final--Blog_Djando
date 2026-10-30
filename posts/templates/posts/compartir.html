@@ -1,0 +1,27 @@
+{% extends "posts/base.html" %}
+{% block title %}Compartir | Mi Blog{% endblock %}
+{% block content %}
+<h1>Compartir "{{ post.titulo }}"</h1>
+<p class="meta">Permiso por objeto (django-guardian): la persona podrá editar este post y ningún otro.</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn" type="submit">Dar permiso de edición</button>
+</form>
+
+<h2>Quién puede editarlo (además de vos)</h2>
+<ul>
+  {% for u in colaboradores %}
+    <li>
+      {{ u.username }}
+      <form method="post" action="{% url 'quitar_colaborador' post.slug u.username %}" class="inline">
+        {% csrf_token %}<button type="submit">Quitar permiso</button>
+      </form>
+    </li>
+  {% empty %}
+    <li>Nadie todavía.</li>
+  {% endfor %}
+</ul>
+<a class="volver" href="{% url 'detalle_post' post.slug %}">← Volver al post</a>
+{% endblock %}

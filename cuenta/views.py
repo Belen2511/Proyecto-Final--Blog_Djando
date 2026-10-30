@@ -22,7 +22,8 @@ def registro(request):
             # atomic: si falla la creación del perfil, tampoco se guarda el usuario.
             with transaction.atomic():
                 usuario = form.save()
-            login(request, usuario)
+            # Con dos backends (ModelBackend + guardian), login() necesita saber cuál usar.
+            login(request, usuario, backend="django.contrib.auth.backends.ModelBackend")
             messages.success(request, f"¡Bienvenido, {usuario.username}!")
             return redirect("perfil")
     else:

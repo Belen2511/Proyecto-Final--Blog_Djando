@@ -73,10 +73,10 @@ class FlujoUsuarioTests(TestCase):
     def test_crud_posts_logueado(self):
         user = User.objects.create_user("fede", password="x")
         self.client.force_login(user)
-        r = self.client.post(reverse("nuevo_post"), {"titulo": "Mi post", "contenido": "c", "estado": "publicado"})
+        r = self.client.post(reverse("nuevo_post"), {"titulo": "Mi post", "contenido": "c", "estado": "borrador"})
         post = Post.objects.get(titulo="Mi post")
         self.assertRedirects(r, reverse("detalle_post", args=[post.slug]))
-        self.client.post(reverse("editar_post", args=[post.slug]), {"titulo": "Editado", "contenido": "c", "estado": "publicado"})
+        self.client.post(reverse("editar_post", args=[post.slug]), {"titulo": "Editado", "contenido": "c", "estado": "borrador"})
         post.refresh_from_db()
         self.assertEqual(post.titulo, "Editado")
         self.client.post(reverse("eliminar_post", args=[post.slug]))

@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 from django.utils.text import slugify
 
 
@@ -41,10 +42,16 @@ class Post(ContenidoBase):
     imagen = models.ImageField(upload_to="posts/", null=True, blank=True)
 
     class Meta(ContenidoBase.Meta):
-        pass
+        # Permiso propio: se suma a add/change/delete/view.
+        # Se consulta con user.has_perm("posts.puede_publicar").
+        permissions = [("puede_publicar", "Puede publicar posts")]
 
     def __str__(self):
         return self.titulo
+
+    def get_absolute_url(self):
+        # Las vistas con clases (CreateView/UpdateView) redirigen acá al guardar.
+        return reverse("detalle_post", args=[self.slug])
 
     def save(self, *args, **kwargs):
         if not self.slug:

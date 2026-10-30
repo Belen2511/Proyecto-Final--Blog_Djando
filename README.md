@@ -142,9 +142,12 @@ blog_django/
 │   ├── tests.py
 │   ├── urls.py
 │   ├── views.py
+│   ├── views_cbv.py
+│   ├── test_proteccion.py
 │   ├── migrations/
 │   │
 │   ├── templates/
+│   │   ├── 403.html
 │   │   └── posts/
 │   │       ├── base.html
 │   │       ├── inicio.html
@@ -152,6 +155,8 @@ blog_django/
 │   │       ├── lista_posts.html
 │   │       ├── detalle_post.html
 │   │       ├── mis_posts.html
+│   │       ├── compartir.html
+│   │       ├── lista_protegida.html
 │   │       ├── post_form.html
 │   │       ├── post_confirm_delete.html
 │   │       ├── estadisticas.html
@@ -172,6 +177,7 @@ blog_django/
     ├── tests.py
     ├── urls.py
     ├── views.py
+    ├── management/commands/cargar_demo_auth.py
     ├── migrations/
     │
     └── templates/
@@ -230,8 +236,8 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv(
 
 ### Dependencias
 
-`requirements.txt` incluye **Django**, **Pillow** (para `ImageField`) y
-**python-decouple** (para leer el `.env`). Se actualiza con:
+`requirements.txt` incluye **Django**, **Pillow** (para `ImageField`),
+**python-decouple** (para leer el `.env`) y **django-guardian** (permisos por objeto). Se actualiza con:
 
 ```bash
 pip freeze > requirements.txt
@@ -558,6 +564,9 @@ sin perfil, el perfil público (solo posts publicados y 404 si no existe), cambi
 recuperar la contraseña por mail, el login y el logout, la redirección al login de
 las rutas protegidas, la subida del avatar, **Mis posts** y el CRUD de posts.
 
+`posts/test_proteccion.py` prueba las cuatro formas de proteger vistas (mixins, decoradores,
+permiso propio y guardian), la página 403 y el comando `cargar_demo_auth`. En total son 54 tests.
+
 ## Publicar en PythonAnywhere
 
 El sitio se puede publicar gratis en [PythonAnywhere](https://www.pythonanywhere.com/).
@@ -610,8 +619,13 @@ Guardar con `Ctrl + O`, `Enter` y salir con `Ctrl + X`.
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py createsuperuser
+python manage.py cargar_demo_auth
 python manage.py check --deploy
 ```
+
+`cargar_demo_auth` crea los usuarios de prueba (ver [Proteger vistas](#proteger-vistas)).
+Como el sitio es público, conviene agregar al `.env` una contraseña propia para ellos
+(`DEMO_PASSWORD=...`) antes de correrlo.
 
 ### 4. Crear la aplicación web
 
@@ -671,3 +685,66 @@ Después, **Reload** en la pestaña **Web**.
 - **El sitio se ve sin estilos:** revisar `collectstatic` y la fila `/static/` en **Static files**.
 - En la cuenta gratis, el sitio se desactiva si no se entra a la pestaña **Web** y se aprieta
   **Run until 3 months from today** cada tanto.
+
+## Proteger vistas
+
+El blog muestra cuatro formas de proteger vistas: vistas con clases y mixins, decoradores,
+un permiso propio en el modelo y permisos por objeto con **django-guardian**.
+
+### Usuarios de prueba
+
+```bash
+python manage.py cargar_demo_auth
+```
+
+Crea los grupos **Editores** y **Publicadores**, cuatro usuarios y dos posts. La contraseña de
+todos es `clave-demo-123`, o la que se ponga en `DEMO_PASSWORD` dentro del `.env`.
+Se puede correr varias veces: no duplica nada.
+
+| Usuario | Qué es | Qué puede |
+|---------|--------|-----------|
+| `ana`, `beto` | Autores comunes | Escribir y editar lo suyo. No pueden publicar (solo guardar borradores). |
+| `carla` | Grupo **Editores** | Editar y eliminar posts ajenos, ver `/borradores/` y `/panel-editores/`. |
+| `dani` | Grupo **Publicadores** | Tiene `posts.puede_publicar`: puede pasar un post a "Publicado". |
+
+Un superusuario pasa **todas** las verificaciones de permisos, así que para probar permisos
+conviene usar estos usuarios comunes.
+
+### Dónde está cada forma de protección
+
+| Forma | Archivo | Rutas para probar |
+|-------|---------|-------------------|
+| `LoginRequiredMixin` | `posts/views_cbv.py` → `PostCreateView` | `/cbv/nuevo/` |
+| `UserPassesTestMixin` (solo quien puede modificar) | `posts/views_cbv.py` → `PostUpdateView`, `PostDeleteView` | `/posts/<slug>/cbv-editar/`, `/posts/<slug>/cbv-eliminar/` |
+| `PermissionRequiredMixin` | `posts/views_cbv.py` → `BorradoresCbvView` | `/cbv/borradores/` |
+| `@permission_required` | `posts/views.py` → `borradores` | `/borradores/` |
+| `@user_passes_test` | `posts/views.py` → `panel_editores`, `es_editor` | `/panel-editores/` |
+| Permiso propio (`Meta.permissions`) | `posts/models.py` (`puede_publicar`), `posts/forms.py` (`PostForm.clean_estado`) | publicar desde `/posts/nuevo/` |
+| Permisos por objeto (guardian) | `posts/views.py` → `compartir_post`, `quitar_colaborador`, `mis_posts` | `/posts/<slug>/compartir/`, `/mis-posts/` |
+| La regla que une todo | `posts/views.py` → `puede_modificar` | — |
+| Configuración de guardian | `Config/settings.py` (`INSTALLED_APPS`, `AUTHENTICATION_BACKENDS`) | — |
+
+### Cómo probarlo
+
+1. **Redirección o 403.** `/borradores/` sin sesión → login. Como `ana` → página "Sin permiso" (403).
+   Como `carla` → se ve la lista de borradores.
+2. **`@user_passes_test`.** `/panel-editores/` como `ana` redirige al login aunque ya tenga sesión
+   (así se comporta ese decorador). Como `carla`, abre.
+3. **Permiso propio.** Como `ana`, crear un post con estado "Publicado" muestra
+   "No tenés permiso para publicar". Como `dani`, se publica.
+4. **Permiso por objeto.** Como `ana`, entrar a un post suyo → **Compartir** → `beto`. Como `beto`,
+   **Mis posts** lo muestra en "Compartidos conmigo" y puede editarlo; los demás posts de `ana` siguen dando 403.
+5. **Global frente a objeto.** `carla.has_perm("posts.change_post")` es `True`, pero
+   `carla.has_perm("posts.change_post", post)` es `False`. Por eso `puede_modificar` pregunta por los dos.
+
+### Cosas que conviene saber
+
+- **Orden de los mixins.** Van antes de la vista genérica (`class X(LoginRequiredMixin, UpdateView)`).
+  Al revés, no protegen y Django no avisa.
+- **`raise_exception=True`** le da 403 también al visitante sin sesión. Por eso `borradores`
+  apila `@login_required` arriba: visitante → login; con sesión y sin permiso → 403.
+- **Dos backends y `login()`.** Con `ModelBackend` + guardian, `login(request, user)` necesita
+  `backend="django.contrib.auth.backends.ModelBackend"` (ver `cuenta/views.py`).
+- **Usuario `AnonymousUser`.** Guardian lo crea en la base al migrar. El formulario de compartir lo rechaza.
+- **`accept_global_perms=False`** en `mis_posts`: sin eso, los Editores verían todos los posts
+  como "compartidos conmigo".

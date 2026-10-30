@@ -38,6 +38,7 @@ CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
 INSTALLED_APPS = [
     "posts",
     "cuenta",
+    "guardian",  # permisos por objeto (django-guardian)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -145,6 +146,13 @@ DEFAULT_FROM_EMAIL = "Mi Blog <no-responder@miblog.local>"
 LOGIN_URL = "Login"
 LOGIN_REDIRECT_URL = "lista_posts"
 LOGOUT_REDIRECT_URL = "lista_posts"
+
+# Backends de autenticación: el primero resuelve permisos globales (grupos, usuario);
+# el segundo (guardian) resuelve permisos sobre UN objeto concreto (por ejemplo, un post compartido).
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
+]
 
 
 # Producción (DEBUG=False): cookies solo por HTTPS y cabeceras de seguridad.

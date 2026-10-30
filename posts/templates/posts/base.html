@@ -31,6 +31,7 @@
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'nuevo_post' %}">Crear post</a></li>
                     <li><a href="{% url 'mis_posts' %}">Mis posts</a></li>
+                    {% if perms.posts.change_post %}<li><a href="{% url 'borradores' %}">Borradores</a></li>{% endif %}
                     <li>
                         <a href="{% url 'perfil' %}">
                             {% if user.perfil.avatar %}<img src="{{ user.perfil.avatar.url }}" alt="" class="avatar-mini">{% endif %}

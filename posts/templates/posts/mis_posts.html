@@ -1,5 +1,5 @@
 {% extends "posts/base.html" %}
-{% block title %}Mis posts{% endblock %}
+{% block title %}Mis posts | Mi Blog{% endblock %}
 {% block content %}
 <h1>Mis posts</h1>
 <ul>
@@ -9,6 +9,7 @@
       <span class="meta">{{ post.get_estado_display }} · {{ post.likes }} likes</span>
       <span class="acciones">
         <a href="{% url 'editar_post' post.slug %}">Editar</a>
+        <a href="{% url 'compartir_post' post.slug %}">Compartir</a>
         <a href="{% url 'eliminar_post' post.slug %}">Eliminar</a>
       </span>
     </li>
@@ -16,6 +17,18 @@
     <li>Todavía no escribiste nada. <a href="{% url 'nuevo_post' %}">Creá tu primer post</a>.</li>
   {% endfor %}
 </ul>
+<p class="meta">También podés crear un post con la <a href="{% url 'cbv_crear_post' %}">vista basada en clases</a>.</p>
+
+<h2>Compartidos conmigo</h2>
+<ul>
+  {% for post in compartidos %}
+    <li>
+      <a href="{% url 'detalle_post' post.slug %}">{{ post.titulo }}</a>
+      <span class="meta">de {{ post.autor.username }}</span>
+      <span class="acciones"><a href="{% url 'editar_post' post.slug %}">Editar</a></span>
+    </li>
+  {% empty %}
+    <li>Nadie te compartió posts.</li>
+  {% endfor %}
+</ul>
 {% endblock %}
-
-

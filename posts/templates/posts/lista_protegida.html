@@ -1,0 +1,16 @@
+{% extends "posts/base.html" %}
+{% block title %}{{ titulo }} | Mi Blog{% endblock %}
+{% block content %}
+<h1>{{ titulo }}</h1>
+<p class="meta">Protegida con: <code>{{ mecanismo }}</code></p>
+<ul>
+  {% for post in posts %}
+    <li>
+      <a href="{% url 'detalle_post' post.slug %}">{{ post.titulo }}</a>
+      <span class="meta">por {{ post.autor.username }} · {{ post.get_estado_display }}</span>
+    </li>
+  {% empty %}
+    <li>No hay posts para mostrar.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
