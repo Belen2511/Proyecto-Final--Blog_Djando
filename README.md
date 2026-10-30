@@ -168,6 +168,7 @@ blog_django/
     ├── apps.py
     ├── forms.py
     ├── models.py
+    ├── signals.py
     ├── tests.py
     ├── urls.py
     ├── views.py
@@ -177,9 +178,18 @@ blog_django/
         ├── cuentas/
         │   ├── registro.html
         │   ├── perfil.html
+        │   ├── perfil_publico.html
         │   └── editar_perfil.html
         └── registration/
-            └── login.html
+            ├── login.html
+            ├── password_change_form.html
+            ├── password_change_done.html
+            ├── password_reset_form.html
+            ├── password_reset_done.html
+            ├── password_reset_confirm.html
+            ├── password_reset_complete.html
+            ├── password_reset_email.txt
+            └── password_reset_subject.txt
 ```
 
 Archivos como `.env`, `venv/`, `db.sqlite3` y `media/` existen solo en cada
@@ -398,14 +408,17 @@ python manage.py migrate
 | `/cuenta/logout/` | `LogoutView` (nativa) | Cerrar sesión (POST) |
 | `/cuenta/perfil/` | `perfil` | Ver mi perfil (requiere login) |
 | `/cuenta/perfil/editar/` | `editar_perfil` | Editar mi perfil (requiere login) |
+| `/cuenta/perfil/<usuario>/` | `perfil_publico` | Perfil público de un usuario con sus posts publicados |
+| `/cuenta/password/cambiar/` | `PasswordChangeView` (nativa) | Cambiar la contraseña (requiere login) |
+| `/cuenta/password/recuperar/` | `PasswordResetView` (nativa) | Pedir un mail para recuperar la contraseña |
 
 ### Registro
 
 `RegistroForm` (`cuenta/forms.py`) extiende `UserCreationForm` y agrega el campo
-`email` (obligatorio y sin repetir). La vista `registro` guarda el usuario y
-crea su perfil dentro de un `transaction.atomic()` (si falla el perfil, tampoco
-se guarda el usuario), inicia la sesión automáticamente y redirige a **Mi perfil**.
-No se usan signals.
+`email` (obligatorio y sin repetir). La vista `registro` guarda el usuario dentro
+de un `transaction.atomic()` (si falla la creación del perfil, tampoco se guarda
+el usuario), inicia la sesión automáticamente y redirige a **Mi perfil**.
+El perfil lo crea la señal `post_save` (ver [Señal: el perfil nace solo](#señal-el-perfil-nace-solo)).
 
 ### Login y logout
 
@@ -434,16 +447,48 @@ class Perfil(models.Model):
 
 La relación `OneToOneField` garantiza que cada usuario tenga un único perfil.
 
+### Señal: el perfil nace solo
+
+En `cuenta/signals.py`, una señal `post_save` crea el perfil cada vez que se crea
+un usuario, sin importar cómo (registro, admin o `createsuperuser`):
+
+```python
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def crear_perfil(sender, instance, created, **kwargs):
+    if created:
+        Perfil.objects.get_or_create(user=instance)
+```
+
+La señal se registra en `cuenta/apps.py`, dentro de `ready()`:
+
+```python
+class CuentaConfig(AppConfig):
+    name = "cuenta"
+
+    def ready(self):
+        from . import signals  # registra las señales
+```
+
+### Perfil público
+
+`/cuenta/perfil/<usuario>/` muestra el nombre, `@usuario`, el avatar, la biografía,
+el sitio web y la lista de **posts publicados** de ese usuario (los borradores no
+aparecen). Si el usuario no existe, devuelve 404. Si es tu propio perfil, también
+muestra los enlaces **Editar mi perfil** y **Cambiar contraseña**.
+
+Se llega desde el nombre del autor en el detalle de cada post y en los comentarios,
+y desde el "Hola, usuario" del menú.
+
 ### Usuarios sin perfil (casos límite)
 
 Para que ningún usuario quede sin perfil:
 
 | Caso | Cómo se cubre |
 |------|---------------|
-| Registro desde `/cuenta/registro/` | La vista crea el perfil en la misma transacción que el usuario. |
+| Usuario nuevo (registro, admin o `createsuperuser`) | La señal `post_save` crea el perfil. En el registro va dentro de la misma transacción que el usuario. |
 | Usuarios creados antes de existir el modelo `Perfil` | La migración `cuenta/migrations/0002_crear_perfiles_faltantes.py` les crea un perfil vacío al correr `migrate`. |
-| Usuarios creados desde el admin | El admin de usuarios (`cuenta/admin.py`) muestra el perfil en la misma ficha y, al guardar, lo crea si no existe. |
-| Cualquier otro caso (por ejemplo `createsuperuser`) | Las vistas de perfil usan `Perfil.objects.get_or_create(user=request.user)`, así que el perfil se crea la primera vez que el usuario entra. |
+| Editar el perfil desde el admin | La ficha de cada usuario (`cuenta/admin.py`) muestra su perfil para editarlo. Al crear un usuario no aparece, porque la señal ya lo crea. |
+| Red de seguridad | Las vistas de perfil usan `Perfil.objects.get_or_create(...)`: si algún usuario quedara sin perfil, se crea al entrar. |
 
 ### Avatares
 
@@ -466,15 +511,39 @@ Estas vistas usan `@login_required`. Si se entra sin sesión, redirigen a
 | `/mis-posts/` | `mis_posts` |
 | `/cuenta/perfil/` | `perfil` |
 | `/cuenta/perfil/editar/` | `editar_perfil` |
+| `/cuenta/password/cambiar/` | `PasswordChangeView` (ya trae el login obligatorio) |
 
-El listado (`/posts/`) y el detalle (`/posts/<slug>/`) siguen siendo públicos.
+El listado (`/posts/`), el detalle (`/posts/<slug>/`) y el perfil público
+(`/cuenta/perfil/<usuario>/`) son públicos.
+
+### Contraseñas
+
+Se usan las vistas que ya trae Django (`django.contrib.auth.views`), con templates
+propios en `cuenta/templates/registration/`:
+
+- **Cambiar contraseña** (logueado): desde el menú, **Mi perfil** o **Editar perfil**.
+  Pide la contraseña actual y la nueva dos veces.
+- **Recuperar contraseña:** desde el enlace **¿Olvidaste tu contraseña?** del login.
+  Se ingresa el email, llega un mail con un enlace de un solo uso y ahí se elige
+  la contraseña nueva.
+
+En desarrollo el mail no se envía de verdad: aparece en la terminal donde corre
+`runserver`, porque en `Config/settings.py` se usa el backend de consola:
+
+```python
+MAILERS = {
+    "default": {
+        "BACKEND": "django.core.mail.backends.console.EmailBackend",
+    },
+}
+```
 
 ### Navegación
 
 El menú de `posts/base.html` cambia según `user.is_authenticated`:
 
 - **Visitante anónimo:** Iniciar sesión, Registrarse.
-- **Usuario logueado:** Crear post, Mis posts, Mi perfil (con su avatar), "Hola, usuario" y Cerrar sesión.
+- **Usuario logueado:** Crear post, Mis posts, Mi perfil (con su avatar), "Hola, usuario" (enlace a su perfil público), Cambiar contraseña y Cerrar sesión.
 
 ### Tests
 
@@ -482,7 +551,8 @@ El menú de `posts/base.html` cambia según `user.is_authenticated`:
 python manage.py test
 ```
 
-`cuenta/tests.py` prueba el registro (con creación del perfil), los casos límite
-de usuarios sin perfil (creados desde el admin o antes del modelo), el login y el logout,
-la redirección al login de las rutas protegidas, que el listado y el detalle sean
-públicos, la subida del avatar y el CRUD de posts con un usuario logueado.
+`cuenta/tests.py` prueba el registro (con creación del perfil), que la señal cree
+el perfil (también para superusuarios y sin duplicarlo), los casos límite de usuarios
+sin perfil, el perfil público (solo posts publicados y 404 si no existe), cambiar y
+recuperar la contraseña por mail, el login y el logout, la redirección al login de
+las rutas protegidas, la subida del avatar, **Mis posts** y el CRUD de posts.

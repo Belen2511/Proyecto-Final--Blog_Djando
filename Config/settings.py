@@ -128,11 +128,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
+# En desarrollo los mails (por ejemplo, recuperar contraseña) se muestran en la terminal
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+DEFAULT_FROM_EMAIL = "Mi Blog <no-responder@miblog.local>"
 
 LOGIN_URL = "Login"
 LOGIN_REDIRECT_URL = "lista_posts"

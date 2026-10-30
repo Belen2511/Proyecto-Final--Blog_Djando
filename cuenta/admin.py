@@ -24,10 +24,10 @@ class PerfilInline(admin.StackedInline):
 class UsuarioConPerfilAdmin(UserAdmin):
     inlines = [PerfilInline]
 
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        # Si el usuario se creó desde el admin sin completar el perfil, se lo creamos vacío
-        Perfil.objects.get_or_create(user=form.instance)
+    def get_inlines(self, request, obj=None):
+        # Al crear un usuario no se muestra: la señal crea el perfil sola.
+        # Se edita después, desde la ficha del usuario.
+        return self.inlines if obj else []
 
 
 admin.site.unregister(User)

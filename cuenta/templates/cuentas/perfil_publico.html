@@ -1,0 +1,26 @@
+{% extends "posts/base.html" %}
+{% block title %}{{ usuario.username }} | Mi Blog{% endblock %}
+{% block content %}
+{% if perfil.avatar %}
+  <img src="{{ perfil.avatar.url }}" alt="Avatar de {{ usuario.username }}" class="avatar">
+{% endif %}
+<h1>{{ usuario.get_full_name|default:usuario.username }}</h1>
+<p class="meta">@{{ usuario.username }}{% if perfil.link_web %} · <a href="{{ perfil.link_web }}" target="_blank" rel="noopener">{{ perfil.link_web }}</a>{% endif %}</p>
+{% if perfil.biografia %}<p>{{ perfil.biografia|linebreaksbr }}</p>{% endif %}
+
+{% if user == usuario %}
+  <p class="acciones">
+    <a href="{% url 'editar_perfil' %}">Editar mi perfil</a>
+    <a href="{% url 'password_change' %}">Cambiar contraseña</a>
+  </p>
+{% endif %}
+
+<h2>Posts publicados</h2>
+<ul>
+  {% for post in posts %}
+    <li><a href="{% url 'detalle_post' post.slug %}">{{ post.titulo }}</a> <span class="meta">{{ post.fecha_creacion|date:"d/m/Y" }}</span></li>
+  {% empty %}
+    <li>Sin posts publicados.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

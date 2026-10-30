@@ -1,11 +1,15 @@
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+
+from posts.models import Post
 
 from .forms import PerfilForm, RegistroForm, UsuarioForm
 from .models import Perfil
+
+User = get_user_model()
 
 
 def registro(request):
@@ -14,10 +18,10 @@ def registro(request):
     if request.method == "POST":
         form = RegistroForm(request.POST)
         if form.is_valid():
-            # atomic: si falla la creación del perfil, tampoco se guarda el usuario
+            # La señal post_save (cuenta/signals.py) crea el perfil al guardar el usuario.
+            # atomic: si falla la creación del perfil, tampoco se guarda el usuario.
             with transaction.atomic():
                 usuario = form.save()
-                Perfil.objects.get_or_create(user=usuario)  # el perfil se crea acá, sin signals
             login(request, usuario)
             messages.success(request, f"¡Bienvenido, {usuario.username}!")
             return redirect("perfil")
@@ -26,9 +30,19 @@ def registro(request):
     return render(request, "cuentas/registro.html", {"form": form})
 
 
+def perfil_publico(request, username):
+    """Página pública de un usuario: sus datos y sus posts publicados."""
+    usuario = get_object_or_404(User, username=username)
+    perfil, _ = Perfil.objects.get_or_create(user=usuario)
+    posts = usuario.posts.filter(estado=Post.PUBLICADO)
+    return render(request, "cuentas/perfil_publico.html", {
+        "usuario": usuario, "perfil": perfil, "posts": posts,
+    })
+
+
 @login_required
 def perfil(request):
-    # get_or_create cubre usuarios creados antes del modelo Perfil (o desde el admin)
+    # get_or_create: red de seguridad por si algún usuario quedó sin perfil
     perfil, _ = Perfil.objects.get_or_create(user=request.user)
     return render(request, "cuentas/perfil.html", {"perfil": perfil})
 

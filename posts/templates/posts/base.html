@@ -37,7 +37,8 @@
                             Mi perfil
                         </a>
                     </li>
-                    <li class="meta">Hola, {{ user.username }}</li>
+                    <li class="meta">Hola, <a href="{% url 'perfil_publico' user.username %}">{{ user.username }}</a></li>
+                    <li><a href="{% url 'password_change' %}">Cambiar contraseña</a></li>
                     <li>
                         <form method="post" action="{% url 'Logout' %}" class="inline">
                             {% csrf_token %}
