@@ -20,12 +20,25 @@ Además:
   y permisos por objeto con django-guardian (ver [Proteger vistas](#proteger-vistas)).
 - `SECRET_KEY`, `DEBUG` y los dominios permitidos se leen del archivo `.env`
   (ver [Configuración segura](#configuración-segura)).
-- 54 tests automáticos (`python manage.py test`).
+- 60 tests automáticos (`python manage.py test`).
 
 Configuración regional:
 
 - Idioma: `es-ar`
 - Zona horaria: `America/Argentina/Buenos_Aires`
+
+## Tecnologías utilizadas
+
+| Tecnología | Para qué se usa |
+|------------|-----------------|
+| **Python 3.12+** | Lenguaje del proyecto |
+| **Django 6.1** | Framework web: modelos, vistas, templates, formularios, autenticación y admin |
+| **SQLite** | Base de datos (un archivo `db.sqlite3`, se crea con `migrate`) |
+| **Pillow** | Manejo de imágenes (`ImageField` de los posts y avatares) |
+| **python-decouple** | Lee la configuración privada desde el archivo `.env` |
+| **django-guardian** | Permisos por objeto (compartir un post con otro usuario) |
+| **HTML y CSS** | Templates de Django y una hoja de estilos propia (`posts/static/posts/css/estilos.css`) |
+| **PythonAnywhere** | Hosting del sitio publicado |
 
 ## Requisitos
 
@@ -37,7 +50,7 @@ Configuración regional:
 Clonar el repositorio:
 
 ```bash
-gh repo clone Belen2511/Proyecto-Final--Blog_Djando
+git clone https://github.com/Belen2511/Proyecto-Final--Blog_Djando.git
 ```
 
 Entrar a la carpeta del proyecto:
@@ -602,8 +615,12 @@ sin perfil, el perfil público (solo posts publicados y 404 si no existe), cambi
 recuperar la contraseña por mail, el login y el logout, la redirección al login de
 las rutas protegidas, la subida del avatar, **Mis posts** y el CRUD de posts.
 
+`posts/tests.py` prueba el CRUD de posts desde la interfaz web con imágenes (crear, ver en el
+detalle y el listado, editar cambiando la imagen, eliminar, posts sin imagen y archivos que no
+son imágenes).
+
 `posts/test_proteccion.py` prueba las cuatro formas de proteger vistas (mixins, decoradores,
-permiso propio y guardian), la página 403 y el comando `cargar_demo_auth`. En total son 54 tests.
+permiso propio y guardian), la página 403 y el comando `cargar_demo_auth`. En total son 60 tests.
 
 ## Publicar en PythonAnywhere
 
@@ -786,3 +803,7 @@ conviene usar estos usuarios comunes.
 - **Usuario `AnonymousUser`.** Guardian lo crea en la base al migrar. El formulario de compartir lo rechaza.
 - **`accept_global_perms=False`** en `mis_posts`: sin eso, los Editores verían todos los posts
   como "compartidos conmigo".
+
+## Autor
+
+**Romina Belén Vogeli** · GitHub: [Belen2511](https://github.com/Belen2511)
