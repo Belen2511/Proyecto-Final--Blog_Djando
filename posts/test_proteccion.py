@@ -301,3 +301,40 @@ class DemoYPaginasTests(ProteccionTestCase):
             "password1": "ClaveSegura123!", "password2": "ClaveSegura123!",
         })
         self.assertEqual(int(self.client.session["_auth_user_id"]), User.objects.get(username="nuevo").pk)
+
+
+class BorradoresPrivadosTests(ProteccionTestCase):
+    """Un borrador solo lo ve quien puede editarlo: su autor, un Editor o alguien a quien se lo compartieron."""
+
+    def setUp(self):
+        self.borrador = self.crear(titulo="Borrador secreto", estado="borrador")
+        self.publicado = self.crear(titulo="Post publicado", estado="publicado")
+        self.detalle = reverse("detalle_post", args=[self.borrador.slug])
+
+    def test_visitante_anonimo_no_ve_borradores(self):
+        self.assertEqual(self.client.get(self.detalle).status_code, 404)
+        r = self.client.get(reverse("lista_posts"))
+        self.assertContains(r, "Post publicado")
+        self.assertNotContains(r, "Borrador secreto")
+        self.assertContains(self.client.get(reverse("estadisticas")), "Total de posts: 1")
+
+    def test_otro_usuario_no_ve_el_borrador_ajeno(self):
+        self.entrar("beto")
+        self.assertEqual(self.client.get(self.detalle).status_code, 404)
+        self.assertNotContains(self.client.get(reverse("lista_posts")), "Borrador secreto")
+
+    def test_el_autor_ve_su_borrador(self):
+        self.entrar("ana")
+        self.assertContains(self.client.get(self.detalle), "Borrador secreto")
+        self.assertContains(self.client.get(reverse("lista_posts")), "Borrador secreto")
+
+    def test_un_editor_ve_los_borradores(self):
+        self.entrar("carla")
+        self.assertContains(self.client.get(self.detalle), "Borrador secreto")
+        self.assertContains(self.client.get(reverse("lista_posts")), "Borrador secreto")
+
+    def test_un_colaborador_ve_el_borrador_compartido(self):
+        assign_perm("posts.change_post", self.beto, self.borrador)
+        self.entrar("beto")
+        self.assertContains(self.client.get(self.detalle), "Borrador secreto")
+        self.assertContains(self.client.get(reverse("lista_posts")), "Borrador secreto")

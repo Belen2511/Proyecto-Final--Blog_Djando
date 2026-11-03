@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.db.models import Avg
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from guardian.shortcuts import assign_perm, get_objects_for_user, get_users_with_perms, remove_perm
@@ -30,6 +31,20 @@ def puede_modificar(user, post):
     )
 
 
+def posts_visibles(user):
+    """Posts que este usuario puede ver en listados.
+    - Visitante anónimo: solo los publicados.
+    - Con sesión: los publicados, sus propios borradores y los que le compartieron.
+    - Con el permiso global posts.change_post (Editores): todos."""
+    publicados = Post.objects.filter(estado=Post.PUBLICADO)
+    if not user.is_authenticated:
+        return publicados
+    if user.has_perm("posts.change_post"):
+        return Post.objects.all()
+    compartidos = get_objects_for_user(user, "posts.change_post", klass=Post, accept_global_perms=False)
+    return (publicados | Post.objects.filter(autor=user) | compartidos).distinct()
+
+
 def es_editor(user):
     """Regla sobre la PERSONA (no sobre un objeto): pertenece al grupo Editores."""
     return user.groups.filter(name="Editores").exists()
@@ -47,7 +62,7 @@ def acerca(request):
 
 
 def lista_posts(request):
-    posts = Post.objects.select_related("autor").all()  # select_related => JOIN para optimizar consultas
+    posts = posts_visibles(request.user).select_related("autor")  # select_related => JOIN para optimizar consultas
     form = BuscarForm(request.GET or None)  # GET: unbound si no hay parámetros
     if form.is_valid():
         q = form.cleaned_data["q"]
@@ -73,6 +88,9 @@ def mis_posts(request):
 
 def detalle_post(request, slug):
     post = get_object_or_404(Post, slug=slug)
+    # Un borrador solo lo ve quien puede editarlo; para el resto (y el visitante anónimo) no existe.
+    if post.estado == Post.BORRADOR and not puede_modificar(request.user, post):
+        raise Http404("Post no encontrado")
     return render(request, "posts/detalle_post.html", {
         "post": post,
         "puede_modificar": puede_modificar(request.user, post),
@@ -194,8 +212,8 @@ def quitar_colaborador(request, slug, username):
 # El resto
 # ---------------------------------------------------------------------------
 def estadisticas(request):
-    """Equivalente a la opción 5 del menú de consola, pero con el ORM."""
-    posts = Post.objects.all()
+    """Equivalente a la opción 5 del menú de consola, pero con el ORM. Solo cuenta los publicados."""
+    posts = Post.objects.filter(estado=Post.PUBLICADO)
     contexto = {
         "total": posts.count(),
         "promedio": posts.aggregate(p=Avg("likes"))["p"],

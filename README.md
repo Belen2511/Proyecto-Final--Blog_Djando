@@ -20,7 +20,7 @@ Además:
   y permisos por objeto con django-guardian (ver [Proteger vistas](#proteger-vistas)).
 - `SECRET_KEY`, `DEBUG` y los dominios permitidos se leen del archivo `.env`
   (ver [Configuración segura](#configuración-segura)).
-- 60 tests automáticos (`python manage.py test`).
+- 65 tests automáticos (`python manage.py test`).
 
 Configuración regional:
 
@@ -574,6 +574,10 @@ Estas vistas usan `@login_required`. Si se entra sin sesión, redirigen a
 El listado (`/posts/`), el detalle (`/posts/<slug>/`) y el perfil público
 (`/cuenta/perfil/<usuario>/`) son públicos.
 
+**Borradores:** un post en estado borrador solo lo ve quien puede editarlo (su autor,
+un Editor o alguien a quien se lo compartieron). Para el visitante anónimo y el resto
+de los usuarios no aparece en el listado ni en las estadísticas, y su enlace da 404.
+
 ### Contraseñas
 
 Se usan las vistas que ya trae Django (`django.contrib.auth.views`), con templates
@@ -620,7 +624,7 @@ detalle y el listado, editar cambiando la imagen, eliminar, posts sin imagen y a
 son imágenes).
 
 `posts/test_proteccion.py` prueba las cuatro formas de proteger vistas (mixins, decoradores,
-permiso propio y guardian), la página 403 y el comando `cargar_demo_auth`. En total son 60 tests.
+permiso propio y guardian), la página 403 y el comando `cargar_demo_auth`. En total son 65 tests.
 
 ## Publicar en PythonAnywhere
 

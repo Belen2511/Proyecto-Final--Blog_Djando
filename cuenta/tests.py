@@ -50,7 +50,7 @@ class FlujoUsuarioTests(TestCase):
 
     def test_listado_y_detalle_son_publicos(self):
         autor = User.objects.create_user("dani", password="x")
-        post = Post.objects.create(titulo="Público", autor=autor)
+        post = Post.objects.create(titulo="Público", autor=autor, estado=Post.PUBLICADO)
         self.assertEqual(self.client.get(reverse("lista_posts")).status_code, 200)
         self.assertEqual(self.client.get(reverse("detalle_post", args=[post.slug])).status_code, 200)
 
