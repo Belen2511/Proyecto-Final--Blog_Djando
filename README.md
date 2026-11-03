@@ -1,11 +1,26 @@
 # Blog Django
 
-Proyecto base de un blog web desarrollado con Django.
+Blog web desarrollado con Django: publicaciones con imágenes, usuarios con perfil,
+permisos para proteger vistas y configuración segura. Publicado en PythonAnywhere.
+
+**Sitio publicado:** https://belen2511.pythonanywhere.com
 
 ## Descripción
 
-Este repositorio contiene la estructura inicial de un proyecto Django para construir un blog.
-Incluye la configuración base del proyecto (`Config`) y dos aplicaciones: `posts` (publicaciones) y `cuenta` (usuarios y perfiles).
+El proyecto tiene la configuración (`Config`) y dos aplicaciones:
+
+- `posts`: publicaciones del blog. CRUD con imágenes, búsqueda por título y autor,
+  estadísticas, contacto, **Mis posts** y compartir un post con otro usuario.
+- `cuenta`: usuarios. Registro, login y logout, perfil con avatar (creado por una señal),
+  perfil público, cambio y recuperación de contraseña.
+
+Además:
+
+- Cuatro formas de proteger vistas: mixins, decoradores, un permiso propio (`puede_publicar`)
+  y permisos por objeto con django-guardian (ver [Proteger vistas](#proteger-vistas)).
+- `SECRET_KEY`, `DEBUG` y los dominios permitidos se leen del archivo `.env`
+  (ver [Configuración segura](#configuración-segura)).
+- 54 tests automáticos (`python manage.py test`).
 
 Configuración regional:
 
@@ -87,8 +102,18 @@ python manage.py migrate
 ```
 
 La base de datos (`db.sqlite3`) no se sube al repositorio, así que este paso
-es necesario la primera vez. Después hay que cargar los posts desde el admin
-(ver [Cargar contenido desde el admin](#cargar-contenido-desde-el-admin)).
+es necesario la primera vez. Después se pueden crear los usuarios de prueba
+(ver [Usuarios de prueba](#usuarios-de-prueba)):
+
+```bash
+python manage.py cargar_demo_auth
+```
+
+y un superusuario para el admin:
+
+```bash
+python manage.py createsuperuser
+```
 
 ## Ejecutar el servidor
 
@@ -108,11 +133,24 @@ Páginas disponibles:
 |------|-------------|
 | `/` | Página de inicio |
 | `/acerca/` | Acerca de (autor y propósito del sitio) |
-| `/posts/` | Listado de publicaciones |
+| `/estadisticas/` | Estadísticas de los posts |
+| `/contacto/` | Formulario de contacto |
+| `/posts/` | Listado de publicaciones (con búsqueda por título y autor) |
 | `/posts/<slug>/` | Detalle de una publicación |
-| `/posts/nuevo/` | Crear una publicación |
+| `/posts/nuevo/` | Crear una publicación (requiere login) |
 | `/posts/<slug>/editar/` | Editar una publicación |
 | `/posts/<slug>/eliminar/` | Eliminar una publicación (pide confirmación) |
+| `/posts/<slug>/compartir/` | Compartir una publicación con otro usuario (solo el autor) |
+| `/mis-posts/` | Mis posts y los que me compartieron |
+| `/borradores/` | Borradores (requiere el permiso `posts.change_post`) |
+| `/panel-editores/` | Panel de editores (solo el grupo Editores) |
+| `/cbv/nuevo/`, `/cbv/borradores/` | Las mismas páginas hechas con vistas basadas en clases |
+| `/cuenta/registro/` | Crear una cuenta |
+| `/cuenta/login/` | Iniciar sesión |
+| `/cuenta/perfil/` | Mi perfil (requiere login) |
+| `/cuenta/perfil/<usuario>/` | Perfil público de un usuario |
+| `/cuenta/password/cambiar/` | Cambiar la contraseña |
+| `/cuenta/password/recuperar/` | Recuperar la contraseña por mail |
 | `/admin/` | Panel de administración |
 
 Para detener el servidor: `Ctrl + C`.
